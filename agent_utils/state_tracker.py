@@ -282,7 +282,7 @@ class StateTracker:
 		# +Key bình thường:
 		# 	+ Làm như bth, tức là chỉ cập nhật 1 key với 1 value
 		# +Key đặc biệt:
-		# 	+ đồng ý: nhận thông tin inform chung vào dkien và object vào dkien 
+		# 	+ đồng ý: nhận thông tin inform chung hoặc riêng vào dkien và object vào dkien 
 		# 	+ anything: tìm object còn trống và bỏ vào (là object có chứa ''), đồng thời bỏ vào thông tin chung 
         # nếu câu đầu tiên nhập vào ner có ít nhất 2 key đặc biệt hoặc 1 key đặc biệt nhưng intent cũng là key đặc biệt khác, 
         # còn không thì chỉ bỏ vào thông tin chung

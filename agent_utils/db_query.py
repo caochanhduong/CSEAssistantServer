@@ -106,6 +106,8 @@ class DBQuery:
         return filled_inform
  
     def _count_slot_values(self, key, db_subdict):
+    # TO DO:    _count_slot_values: viết 1 module để collect các giá trị trong các object và key chung thành 1 list dài (set lại) rồi đếm (đối với các key đặc biệt),
+	# đối với key chung thì chỉ đếm giá trị đơn (tuy nhiên value được trả về sẽ bao gồm key ngoài và trong, không đúng với mong muốn)
         """
         Return a dict of the different values and occurrences of each, given a key, from a sub-dict of database
  
@@ -158,6 +160,7 @@ class DBQuery:
 
  
     def get_db_results(self, constraints):
+        # + get_db_results KHÔNG cần sửa vì nó chỉ có chức năng lấy kết quả từ convertregextoconstraint
         """
         Get all items in the database that fit the current constraints.
  
@@ -228,6 +231,10 @@ class DBQuery:
  
         return available_options
     def get_db_results_for_slots(self, current_informs):
+    #  TO DO:   + get_db_results_for_slots: viết 1 module để với mỗi key thì chỉ current inform còn các giá trị của chỉ key đó 
+	# (ví dụ current inform có time, works ở ngoài và trong thì khi xét time chỉ xét time ở ngoài và trong, bỏ hết các giá trị 
+	# của key works), còn với các key 
+	# bình thường thì làm như bình thường (key:value)
         """
         Counts occurrences of each current inform slot (key and value) in the database items.
  
@@ -303,6 +310,11 @@ class DBQuery:
     #     return regex_constraint_dict
 
     def convert_to_regex_constraint(self, constraints):
+        # TO DO :
+        # + Chỗ convertregextoconstraint không cần phân biệt câu đầu tiên hay câu quá trình hội thoại, 
+        # chỉ cần viết thêm 1 module lọc ra các key nào nằm ở cả key chung và trong object và đem các key đó 
+        # đi query CÙNG NHAU ở ngoài và trong, 
+	    # còn lại query theo ở ngoài
         list_and_out = []
         list_and_in = []
         ele_match_obj = {}
