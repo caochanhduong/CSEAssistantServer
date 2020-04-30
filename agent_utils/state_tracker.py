@@ -206,13 +206,14 @@ class StateTracker:
             assert agent_action['inform_slots']
             # print("intent: inform, current inform_slots: {}".format(self.current_informs))
             # print("current request slot: {}".format(self.current_request_slots))
-
+            # TO DO : bổ sung thêm 1 key 'list_match_obj' vào agent action
             inform_slots = self.db_helper.fill_inform_slot(agent_action['inform_slots'], self.current_informs)
             agent_action['inform_slots'] = inform_slots
             assert agent_action['inform_slots']
             key, value = list(agent_action['inform_slots'].items())[0]  # Only one
             assert key != 'match_found'
             assert value != 'PLACEHOLDER', 'KEY: {}'.format(key)
+            #TO DO :nhận thông tin inform chung hoặc riêng vào dkien và object vào dkien 
             if isinstance(value, tuple):
               self.current_informs[key] = list(value)
             else:
@@ -239,19 +240,19 @@ class StateTracker:
                         if isinstance(data[self.current_request_slots[0]], list) and len(data[self.current_request_slots[0]]) > 0:
                             db_results_no_empty[key] = copy.deepcopy(data)
                 if db_results_no_empty:
+                    # lấy key là kết quả đầu tiên của danh sách các hoạt động thỏa điều kiện, value là list các hoạt động thỏa dkien
                     key, data = list(db_results_no_empty.items())[0]
                     data = list(db_results_no_empty.values())
                     # print("MATCH FOUND: filtered only not empty data ")
                 else:
+                    # lấy key là kết quả đầu tiên của danh sách các hoạt động thỏa điều kiện, value là list các hoạt động thỏa dkien
                     key, data = list(db_results.items())[0]
-                                        #######??????????
                     data = list(db_results.values())
                 # key, data = list(db_results.items())[0]
                 agent_action['inform_slots'] = {key:copy.deepcopy(data)}
                 agent_action['inform_slots'][self.match_key] = str(key)
             else:
                 agent_action['inform_slots'][self.match_key] = 'no match available'
-                ################?????????
             self.current_informs[self.match_key] = agent_action['inform_slots'][self.match_key]
         agent_action.update({'round': self.round_num, 'speaker': 'Agent'})
         

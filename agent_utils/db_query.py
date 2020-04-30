@@ -43,6 +43,8 @@ class DBQuery:
         self.match_key = usersim_default_key
  
     def fill_inform_slot(self, inform_slot_to_fill, current_inform_slots):
+        #TO TO :lấy kết quả VALUE có count max từ _count_slot_values, sau đó search lại trong db_results lấy giá trị đầu
+	    # tiên có value giống với VALUE có count max (1 module) và trả về các object thỏa current inform (1 module) cũng như value max đó về
         """
         Given the current informs/constraints fill the informs that need to be filled with values from the database.
  
@@ -106,8 +108,11 @@ class DBQuery:
         return filled_inform
  
     def _count_slot_values(self, key, db_subdict):
-    # TO DO:    _count_slot_values: viết 1 module để collect các giá trị trong các object và key chung thành 1 list dài (set lại) rồi đếm (đối với các key đặc biệt),
-	# đối với key chung thì chỉ đếm giá trị đơn (tuy nhiên value được trả về sẽ bao gồm key ngoài và trong, không đúng với mong muốn)
+    # TO DO: _count_slot_values: đối với các key bình thường thì đếm các value của từng key bình thường, còn đối với các 
+    # key đặc biệt thì viết 1 module lấy current_inform ra, từ đó lấy ra được giá trị mà đi chung với điều kiện các key 
+    # đặc biệt trong current inform rồi mới đếm (ví dụ dùng key works, name_place trong current_inform để xác định value 
+    # của key time đi chung với works, name_place trong current_inform, sau đó đếm sự xuất hiện của từng value trong 
+    # db_subdict) 
         """
         Return a dict of the different values and occurrences of each, given a key, from a sub-dict of database
  

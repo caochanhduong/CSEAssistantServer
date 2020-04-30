@@ -134,7 +134,7 @@ Requirement:
 			+ Key đặc biệt: so với key đặc biệt được trả về và kết luận
 
 
-Problem: 
+implement idea: 
 	+ Lúc cập nhật slot của các key đặc biệt (ví dụ ner bắt được 2 key là "works", "name_place"), thì phải cập nhật 2 slot còn lại (address, time) với giá trị '' để các object không bị lệch index, tuy nhiên lúc cập nhật vào ma trận current_slots_rep sẽ không cập nhật các key đó nếu các value trong các key đó toàn là ''. (lưu ý nếu là list rỗng thì vẫn tính)
 	+ lúc agent action là inform (inform key chung và các object thỏa điều kiện) thì trong ma trận agent_inform_slots_rep trong state  tính luôn các key của các object thỏa điều kiện 
 	+ current_request_slots giữ nguyên do request lúc nào cũng chỉ 1 thông tin .
@@ -145,7 +145,18 @@ Problem:
 	(ví dụ current inform có time, works ở ngoài và trong thì khi xét time chỉ xét time ở ngoài và trong, bỏ hết các giá trị 
 	của key works), còn với các key 
 	bình thường thì làm như bình thường (key:value)
-	+ _count_slot_values: viết 1 module để collect các giá trị trong các object và key chung thành 1 list dài (set lại) rồi đếm (đối với các key đặc biệt),
-	đối với key chung thì chỉ đếm giá trị đơn (vde: value được trả về sẽ bao gồm key ngoài và trong, không đúng với mong muốn)
+	+ _count_slot_values: đối với các key bình thường thì đếm các value của từng key bình thường, còn đối với các key đặc biệt 
+	thì viết 1 module lấy current_inform ra, từ đó lấy ra được giá trị mà đi chung với điều kiện các key đặc biệt trong current inform rồi mới đếm
+	(ví dụ dùng key works, name_place trong current_inform để xác định value của key time đi chung với works, name_place trong 
+	current_inform, sau đó đếm sự xuất hiện của từng value trong db_subdict) 
+	(cũ: viết 1 module để collect các giá trị trong các object và key chung thành 1 list dài (set lại) rồi đếm (đối với các key đặc biệt),
+	đối với key chung thì chỉ đếm giá trị đơn (vde: value được trả về sẽ bao gồm key ngoài và trong, không đúng với mong muốn))
 	+ fill_inform_slot: lấy kết quả VALUE có count max từ _count_slot_values, sau đó search lại trong db_results lấy giá trị đầu
-	tiên có value giống với VALUE có count max và 
+	tiên có value giống với VALUE có count max và trả về các object cũng như value max đó về
+	+ update_state_agent trường hợp inform, nhận thông tin inform chung hoặc riêng vào dkien và object vào dkien 
+	+ update_state_agent trường hợp matchfound, lấy key là kết quả đầu tiên của danh sách các hoạt động thỏa điều kiện, value là list các hoạt động thỏa dkien,
+	current_inform có key "activity" có giá trị là id của bài đăng đầu tiên thỏa trong db_results (không cần sửa)
+	+ response_craft: trường hợp agent inform, bổ sung thêm response thêm các object thỏa điều kiện (chỉ cần lấy ra từ trong agent action)
+	+ agent_action['intent'] == 'inform' trong state tracker bổ sung thêm 1 key 'list_match_obj' vào agent action
+	+ response_craft: trường hợp agent matchfound, lúc lấy ra kết quả đầu tiên thỏa thì get lại current_inform từ state tracker để tìm các list match obj 
+	thỏa điều kiện, đồng thời response lại câu cho user luôn (không giống với inform chỉ cần lấy ra và response câu)
