@@ -143,7 +143,8 @@ def response_craft(agent_action, state_tracker, confirm_obj, isGreeting=False):
         return random.choice(GREETING)
     agent_intent = agent_action['intent']
     if agent_intent == "inform":
-        # TO DO : bổ sung thêm response thêm các object thỏa điều kiện (chỉ cần lấy ra từ trong agent action)
+        # TO DO : trường hợp agent inform, bổ sung thêm response thêm các object thỏa điều kiện (chỉ cần lấy ra từ trong agent action), lúc confirm chỉ cần 
+	# so giá trị của confirm obj với inform_value trong agent action đã được fill
         inform_slot = list(agent_action['inform_slots'].keys())[0]
         if agent_action['inform_slots'][inform_slot] == 'no match available':
             return random.choice(NOT_FOUND)
@@ -169,7 +170,8 @@ def response_craft(agent_action, state_tracker, confirm_obj, isGreeting=False):
         return random.choice(DONE)
     elif agent_intent == "match_found":
         # TO DO :trường hợp agent matchfound, lúc lấy ra kết quả đầu tiên thỏa thì get lại current_inform từ state tracker để tìm các list match obj 
-	# thỏa điều kiện, đồng thời response lại câu cho user luôn (không giống với inform chỉ cần lấy ra và response câu)
+	# thỏa điều kiện, đồng thời response lại câu cho user luôn (không giống với inform chỉ cần lấy ra và response câu), inform value mà phải trả về 
+    # cho user bây giờ phải viết 1 module sử dụng current_inform để tìm ra value cần inform cho user, lúc confirm thì so value này với confirm_obj và kết luận
         assert len(state_tracker.current_request_slots) > 0
         inform_slot = state_tracker.current_request_slots[0]
         if agent_action['inform_slots']['activity'] == "no match available":

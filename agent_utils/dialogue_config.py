@@ -81,3 +81,6 @@ all_intents = ['inform', 'request', 'done', 'match_found', 'thanks', 'reject']
 #              'theater', 'theater_chain', 'video_format', 'zip', 'result', usersim_default_key, 'mc_list']
 all_slots = ['name_activity', 'type_activity', 'holder', 'time', 'name_place', 'address',
                        'reward', 'contact', 'register', 'works', 'joiner',usersim_default_key]
+
+
+special_keys = ['time', 'name_place', 'address','works']

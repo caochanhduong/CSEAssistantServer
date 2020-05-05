@@ -156,7 +156,14 @@ implement idea:
 	+ update_state_agent trường hợp inform, nhận thông tin inform chung hoặc riêng vào dkien và object vào dkien 
 	+ update_state_agent trường hợp matchfound, lấy key là kết quả đầu tiên của danh sách các hoạt động thỏa điều kiện, value là list các hoạt động thỏa dkien,
 	current_inform có key "activity" có giá trị là id của bài đăng đầu tiên thỏa trong db_results (không cần sửa)
-	+ response_craft: trường hợp agent inform, bổ sung thêm response thêm các object thỏa điều kiện (chỉ cần lấy ra từ trong agent action)
+	+ response_craft: trường hợp agent inform, bổ sung thêm response thêm các object thỏa điều kiện (chỉ cần lấy ra từ trong agent action), lúc confirm chỉ cần 
+	so giá trị của confirm obj với inform_value trong agent action đã được fill
 	+ agent_action['intent'] == 'inform' trong state tracker bổ sung thêm 1 key 'list_match_obj' vào agent action
 	+ response_craft: trường hợp agent matchfound, lúc lấy ra kết quả đầu tiên thỏa thì get lại current_inform từ state tracker để tìm các list match obj 
-	thỏa điều kiện, đồng thời response lại câu cho user luôn (không giống với inform chỉ cần lấy ra và response câu)
+	thỏa điều kiện, đồng thời response lại câu cho user luôn (không giống với inform chỉ cần lấy ra và response câu), inform value mà phải trả về cho user bây giờ
+	phải viết 1 module sử dụng current_inform để tìm ra value cần inform cho user, lúc confirm thì so value này với confirm_obj và kết luận
+
+
+
+STATUS:
++ đang implement update_state_user, thiếu trường hợp cập nhật key riêng lẻ vào current inform 
