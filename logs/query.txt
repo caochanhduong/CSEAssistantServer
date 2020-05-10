@@ -162,7 +162,10 @@ implement idea:
 	+ response_craft: trường hợp agent matchfound, lúc lấy ra kết quả đầu tiên thỏa thì get lại current_inform từ state tracker để tìm các list match obj 
 	thỏa điều kiện, đồng thời response lại câu cho user luôn (không giống với inform chỉ cần lấy ra và response câu), inform value mà phải trả về cho user bây giờ
 	phải viết 1 module sử dụng current_inform để tìm ra value cần inform cho user, lúc confirm thì so value này với confirm_obj và kết luận
+	+ problem: update_state_agent đã append vào điều kiện rồi nhưng update_state_user lại append thêm phát nữa, tìm cách check đã tồn tại value trong điều kiện 
+	rồi để khỏi append
 
+	+ problem: tìm cách dựa vào current inform để lấy ra value inform phù hợp trong trường hợp matchfound (không thể dùng first user action)
 
 
 STATUS:

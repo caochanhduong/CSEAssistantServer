@@ -30,6 +30,7 @@ class StateTracker:
         self.reset()
         self.current_request_slots = []
         self.first_user_action = None
+        self.agent_inform_stack = []
 
     def get_state_size(self):
         """Returns the state size of the state representation used by the agent."""
@@ -83,7 +84,11 @@ class StateTracker:
         # tính luôn các key của các object thỏa điều kiện 
         user_inform_slots_rep = np.zeros((self.num_slots,))
         for key in user_action['inform_slots'].keys():
+            list_match_obj = user_action['list_match_obj']
             user_inform_slots_rep[self.slots_dict[key]] = 1.0
+            if list_match_obj != None:
+                for special_key in special_keys:
+                    user_inform_slots_rep[self.slots_dict[special_key]] = 1.0
 
         # Create bag of request slots representation to represent the current user action
         # EDIT: user request slots should maintain through out the episode
@@ -99,7 +104,11 @@ class StateTracker:
 
         # TO DO : chỉ cập nhật các key trong current inform mà giá trị của nó khác rỗng (tức là không chỉ toàn chứa '', nếu là list rỗng thì vẫn tính là có giá trị)
         for key in self.current_informs:
-            current_slots_rep[self.slots_dict[key]] = 1.0
+            if key in special_keys:
+                if self.current_informs[0] != '' or self.current_informs[1][0] != '':
+                    current_slots_rep[self.slots_dict[key]] = 1.0     
+            else:
+                current_slots_rep[self.slots_dict[key]] = 1.0
 
         # Encode last agent intent
         agent_act_rep = np.zeros((self.num_intents,))
@@ -112,11 +121,15 @@ class StateTracker:
 
         # TO DO :agent action là inform (inform key chung/riêng và các object thỏa điều kiện) thì trong ma trận agent_inform_slots_rep trong state  
         # tính luôn các key của các object thỏa điều kiện 
+        
         if last_agent_action:
+            list_match_obj = last_agent_action['list_match_obj']
             for key in last_agent_action['inform_slots'].keys():
                 if key in agent_inform_slots:
                     agent_inform_slots_rep[self.slots_dict[key]] = 1.0
-
+            if list_match_obj != None:
+                for special_key in special_keys:
+                    agent_inform_slots_rep[self.slots_dict[special_key]] = 1.0
         # Encode last agent request slots
         agent_request_slots_rep = np.zeros((self.num_slots,))
         if last_agent_action:
@@ -208,17 +221,44 @@ class StateTracker:
             # print("intent: inform, current inform_slots: {}".format(self.current_informs))
             # print("current request slot: {}".format(self.current_request_slots))
             # TO DO : bổ sung thêm 1 key 'list_match_obj' vào agent action
-            inform_slots = self.db_helper.fill_inform_slot(agent_action['inform_slots'], self.current_informs)
+            inform_slots, list_match_obj = self.db_helper.fill_inform_slot(agent_action['inform_slots'], self.current_informs)
             agent_action['inform_slots'] = inform_slots
+            agent_action['list_match_obj'] = list_match_obj
+            self.agent_inform_stack.append({'inform_slots': inform_slots, 'list_match_obj': list_match_obj})
             assert agent_action['inform_slots']
             key, value = list(agent_action['inform_slots'].items())[0]  # Only one
             assert key != 'match_found'
             assert value != 'PLACEHOLDER', 'KEY: {}'.format(key)
-            #TO DO :nhận thông tin inform chung hoặc riêng vào dkien và object vào dkien 
-            if isinstance(value, tuple):
-              self.current_informs[key] = list(value)
-            else:
-              self.current_informs[key] = value
+            #TO DO :nhận thông tin inform chung hoặc riêng vào dkien và object vào dkien
+            # problem: update_state_agent đã append vào điều kiện rồi nhưng update_state_user lại append thêm phát nữa, tìm cách check đã tồn tại value trong điều kiện 
+	# rồi để khỏi append
+            ##### OLD 
+            # if isinstance(value, tuple):
+            #   self.current_informs[key] = list(value)
+            # else:
+            #   self.current_informs[key] = value
+
+            #### NEW 
+            for key, value in agent_action['inform_slots'].items():
+                if key not in special_keys:
+                    self.current_informs[key] = value
+                else:
+                    if 'list_obj_match' in list(agent_action.keys()): #là câu confirm inform  
+                        list_obj_match = agent_action['list_obj_match']
+                        is_general = agent_action['is_general'] #key để phân biệt value inform hiện tại là chung hay riêng
+                        if is_general == True: #là value inform chung thì mới cần cập nhật, còn không thì không cần
+                            if key not in self.current_informs.keys(): #chưa có thì khởi tạo
+                                self.current_informs[key] = [value,[]]
+                            else: #nếu có rồi thì gán thẳng
+                                self.current_informs[key][0] = value
+                        if list_obj_match != None:
+                            for obj_match in list_obj_match:
+                                for key_obj in obj_match.keys():
+                                    if key_obj not in self.current_informs:
+                                        self.current_informs[key] = ['',[obj_match[key_obj]]]
+                                    else:
+                                        self.current_informs[key][1].append(obj_match[key_obj])
+
         # If intent is match_found then fill the action informs with the matches informs (if there is a match)
         elif agent_action['intent'] == 'match_found':
             assert not agent_action['inform_slots'], 'Cannot inform and have intent of match found!'
@@ -278,6 +318,82 @@ class StateTracker:
                 if self.current_informs[key][1][i] == '': #phát hiện object trống
                     self.current_informs[key][1][i] = value
 
+    def checkExistValue(self, key, value):
+        if key in self.current_informs.keys():
+            if value == self.current_informs[key][0] or value in self.current_informs[key][1]:
+                return True
+        return False
+    
+    def deleteInform(self, inform_obj): #-> replace with ''
+        if self.checkExistInform(inform_obj):
+            inform_slots =  inform_obj['inform_slots']
+            list_match_obj = inform_obj['list_match_obj']
+            for key in inform_slots.keys(): #delete current_informs từ value
+                self.current_informs[key][0] = ''
+            if list_match_obj not in [None,[]]:
+                # danh sách các list key riêng mới (của 4 key works, name_place, address, time)
+                list_new_works_obj = []
+                list_new_address_obj = []
+                list_new_name_place_obj = []
+                list_new_time_obj = []
+
+                #delete current_informs từ object bằng cách tạo mới xong gán lại
+                for i in range(len(self.current_informs['works'][1])): 
+                    has_match_obj = False
+                    for match_obj in list_match_obj:
+                        count_match = 0
+                        for key in special_keys:
+                            if match_obj[key] == self.current_informs[key][1][i]:
+                                count_match += 1
+                        if count_match == 4:
+                            has_match_obj = True
+                            break
+                    if not has_match_obj:
+                        list_new_works_obj.append(self.current_informs['works'][1][i])
+                        list_new_address_obj.append(self.current_informs['address'][1][i])
+                        list_new_name_place_obj.append(self.current_informs['name_place'][1][i])
+                        list_new_time_obj.append(self.current_informs['time'][1][i])
+                self.current_informs['works'][1] = list_new_works_obj
+                self.current_informs['address'][1] = list_new_address_obj
+                self.current_informs['name_place'][1] = list_new_name_place_obj
+                self.current_informs['time'][1] = list_new_time_obj
+                
+                        
+
+    def checkExistInform(self, inform_obj):
+        inform_slots =  inform_obj['inform_slots']
+        list_match_obj = inform_obj['list_match_obj']
+        match_all = True
+        for key in inform_slots.keys():
+            if inform_slots[key] != '':
+                if not self.checkExistValue(key, inform_slots[key]):
+                    match_all = False
+                    break
+        if match_all == True:
+            if list_match_obj not in [None, []] :
+                for key in special_keys: #nếu current inform không đủ key đặc biệt (nhưng lại có list_match_obj)
+                    if key not in self.current_informs.keys():
+                        match_all = False
+                        break
+                if match_all == True: #nếu đủ key đặc biệt thì loop qua
+                    for match_obj in list_match_obj:
+                        match_all_key_in_obj = False
+                        for i in range(len(self.current_informs['works'][1])): 
+                            count_match = 0
+                            for key in special_keys:
+                                if match_obj[key] == self.current_informs[key][1][i]:
+                                    count_match += 1
+                            if count_match == 4:
+                                match_all_key_in_obj = True
+                                break
+                        if match_all_key_in_obj == True:
+                            continue
+                        else:
+                            match_all = False
+                            break
+        return match_all
+
+
 
     def update_state_user(self, user_action, first_user_action):
         """
@@ -321,7 +437,7 @@ class StateTracker:
         # câu đầu tiên nhập vào ner có ít nhất 2 key đặc biệt hoặc 1 key đặc biệt nhưng intent cũng là key đặc biệt khác, 
         # còn không thì chỉ bỏ vào thông tin chung
 
-        if user_action['intent'] == 'request': #câu đầu tiên
+        if user_action['intent'] == 'request': #câu đầu tiên (trước đó không có agent inform nên không cần xóa chỉ thêm)
             # Đếm key đặc biệt trong câu đầu tiên (gồm intent và ner bắt được)
             count_special = 0
             self.first_user_action = user_action
@@ -345,44 +461,50 @@ class StateTracker:
                     if special_key not in self.current_informs.keys():
                         self.current_informs[special_key] = ['',['']]
         else: #các câu inform sau
-            for key, value in user_action['inform_slots'].items():
-                if key not in special_keys:
-                    self.current_informs[key] = value
-                else:
-                    if 'list_obj_match' in list(user_action.keys()): #là câu confirm inform  
-                        list_obj_match = user_action['list_obj_match']
-                        is_general = user_action['is_general'] #key để phân biệt value inform hiện tại là chung hay riêng
-                        if is_general == True: #là value inform chung thì mới cần cập nhật, còn không thì không cần
-                            if key not in self.current_informs.keys(): #chưa có thì khởi tạo
-                                self.current_informs[key] = [value,[]]
-                            else: #nếu có rồi thì gán thẳng
-                                self.current_informs[key][0] = value
-                        if list_obj_match != None:
-                            for obj_match in list_obj_match:
-                                for key_obj in obj_match.keys():
-                                    if key_obj not in self.current_informs:
-                                        self.current_informs[key] = ['',[obj_match[key_obj]]]
-                                    else:
-                                        self.current_informs[key][1].append(obj_match[key_obj])
-                    else: #là câu inform riêng lẻ
-                        #đếm số key đặc biệt của câu đầu tiên để quyết định cập nhật ntn
-                        count_special = 0
-                        if list(self.first_user_action['request_slots'].keys())[0] in special_keys:
-                            count_special = count_special + 1 
-                        for key_first, value_first in self.first_user_action['inform_slots'].items():
-                            # nếu là câu đầu tiên 
-                            if key_first in special_keys:
-                                count_special = count_special + 1
-                        
-                        if key not in self.current_informs:
-                            self.current_informs[key] = [value, ['']]
+            last_agent_inform = self.agent_inform_stack.pop()
+            user_inform_obj = {"inform_slots": user_action['inform_slots'],"list_obj_match": user_action["list_obj_match"]}
+            if user_inform_obj != last_agent_inform: #nếu user_inform khác với agent_inform thì xóa agent inform cũ rồi thêm user inform mới vào
+                if self.checkExistInform(last_agent_inform):
+                    self.deleteInform(last_agent_inform)
+                    ### thêm user inform vào
+                    for key, value in user_action['inform_slots'].items():
+                        if key not in special_keys:
+                            self.current_informs[key] = value
                         else:
-                            self.current_informs[key][0] = value 
-                                               
-                            #nếu chỉ có 1 key đặc biệt thì chỉ cập nhật thông tin chung
-                        if count_special >= 2: #nếu có 2 key đặc biệt trở lên thì làm thêm module tìm object còn trống và bỏ vào
-                            self.fill_current_informs_object(key,value)
-                        
+                            if 'list_obj_match' in list(user_action.keys()): #là câu confirm inform  
+                                list_obj_match = user_action['list_obj_match']
+                                is_general = user_action['is_general'] #key để phân biệt value inform hiện tại là chung hay riêng
+                                if is_general == True: #là value inform chung thì mới cần cập nhật, còn không thì không cần
+                                    if key not in self.current_informs.keys(): #chưa có thì khởi tạo
+                                        self.current_informs[key] = [value,[]]
+                                    else: #nếu có rồi thì gán thẳng
+                                        self.current_informs[key][0] = value
+                                if list_obj_match != None:
+                                    for obj_match in list_obj_match:
+                                        for key_obj in obj_match.keys():
+                                            if key_obj not in self.current_informs:
+                                                self.current_informs[key] = ['',[obj_match[key_obj]]]
+                                            else:
+                                                self.current_informs[key][1].append(obj_match[key_obj])
+                            else: #là câu inform riêng lẻ
+                                #đếm số key đặc biệt của câu đầu tiên để quyết định cập nhật ntn
+                                count_special = 0
+                                if list(self.first_user_action['request_slots'].keys())[0] in special_keys:
+                                    count_special = count_special + 1 
+                                for key_first, value_first in self.first_user_action['inform_slots'].items():
+                                    # nếu là câu đầu tiên 
+                                    if key_first in special_keys:
+                                        count_special = count_special + 1
+                                
+                                if key not in self.current_informs:
+                                    self.current_informs[key] = [value, ['']]
+                                else:
+                                    self.current_informs[key][0] = value 
+                                                    
+                                    #nếu chỉ có 1 key đặc biệt thì chỉ cập nhật thông tin chung
+                                if count_special >= 2: #nếu có 2 key đặc biệt trở lên thì làm thêm module tìm object còn trống và bỏ vào
+                                    self.fill_current_informs_object(key,value)
+                                
 
 
 

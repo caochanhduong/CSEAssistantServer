@@ -143,9 +143,9 @@ def response_craft(agent_action, state_tracker, confirm_obj, isGreeting=False):
         return random.choice(GREETING)
     agent_intent = agent_action['intent']
     if agent_intent == "inform":
-        # TO DO : trường hợp agent inform, bổ sung thêm response thêm các object thỏa điều kiện (chỉ cần lấy ra từ trong agent action), lúc confirm chỉ cần 
-	# so giá trị của confirm obj với inform_value trong agent action đã được fill
+        # TO DO : trường hợp agent inform, bổ sung thêm response thêm các object thỏa điều kiện (chỉ cần lấy ra từ trong agent action)
         inform_slot = list(agent_action['inform_slots'].keys())[0]
+        list_obj_map_match = agent_action['list_obj_match']
         if agent_action['inform_slots'][inform_slot] == 'no match available':
             return random.choice(NOT_FOUND)
 
@@ -161,6 +161,13 @@ def response_craft(agent_action, state_tracker, confirm_obj, isGreeting=False):
             sentence_pattern = random.choice(EMPTY_SLOT)
             sentence = sentence_pattern.replace("*request_slot*", inform_slot)
         # print(sentence_pattern)
+        if inform_slot in list_map_key:
+            if list_obj_map_match not in [None, []]:
+                response_obj += "Trong đó các công việc cụ thể sẽ là (kèm theo thời gian, địa điểm, địa chỉ):\n"
+                for obj_map_match in list_obj_map_match:
+                    response_obj += "************************************************* \n"
+                    for key in list_map_key:
+                        response_obj += "+ {0} : {1} \n".format(AGENT_INFORM_OBJECT[key], ', '.join(obj_map_match[key]))
     elif agent_intent == "request":
         request_slot = list(agent_action['request_slots'].keys())[0]
         sentence_pattern = random.choice(REQUEST[request_slot])
@@ -188,8 +195,15 @@ def response_craft(agent_action, state_tracker, confirm_obj, isGreeting=False):
             response_match = ''
             if confirm_obj != None:
                 if inform_slot not in list_map_key:
+                    # không cần sửa
                     check_match = check_match_sublist_and_substring(confirm_obj[inform_slot],first_result_data[inform_slot])
                 else: #nếu là 4 key map
+                    # TO DO: chỉnh lại 	
+                    # + problem: tìm cách dựa vào current inform để lấy ra value inform phù hợp trong trường hợp matchfound (không thể dùng first user action),
+                    # tuy nhiên lúc cập nhật nhiều object vào current inform thì giờ nó bị lộn xộn (chứa nhiều obj) nên chắc phải dùng first user action
+                    # MỚI : lúc lấy value inform chỉ cần dùng first user action để lọc ra từ first_result_data
+                    # lúc lấy các obj thỏa điều kiện có thể dùng first_result_data không ?????
+
                     check_match = check_match_sublist_and_substring(confirm_obj[inform_slot],first_result_data[inform_slot])
                     # neu chưa match với key chung thì tìm trong map
                     if not check_match:
