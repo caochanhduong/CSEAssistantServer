@@ -951,6 +951,9 @@ def process_message_to_user_request(message,state_tracker):
     
     # print("-----------------------------user action")
     # print(user_action)
+    if "time" in user_action.keys():
+        if user_action["time"] != []:
+            user_action["time"] = parse
     return user_action, confirm_obj
 
 #TEST
