@@ -202,17 +202,49 @@ def response_craft(agent_action, state_tracker, confirm_obj, isGreeting=False):
                     # + problem: tìm cách dựa vào current inform để lấy ra value inform phù hợp trong trường hợp matchfound (không thể dùng first user action),
                     # tuy nhiên lúc cập nhật nhiều object vào current inform thì giờ nó bị lộn xộn (chứa nhiều obj) nên chắc phải dùng first user action
                     # MỚI : lúc lấy value inform chỉ cần dùng first user action để lọc ra từ first_result_data
-                    # lúc lấy các obj thỏa điều kiện có thể dùng first_result_data không ?????
+                    # lúc lấy các obj thỏa điều kiện có thể dùng first_result_data không ????? CHƯA ỔN !!!!!!!!!!!! LỠ ĐÂU GIỮA CHỪNG USER INFORM THÊM THÔNG TIN VÀO OBJ
+                    ############### CHƯA ỔN !!!!!!!!!!!! LỠ ĐÂU GIỮA CHỪNG USER INFORM THÊM THÔNG TIN VÀO OBJ
 
-                    check_match = check_match_sublist_and_substring(confirm_obj[inform_slot],first_result_data[inform_slot])
-                    # neu chưa match với key chung thì tìm trong map
-                    if not check_match:
-                        if "time_works_place_address_mapping" in first_result_data and first_result_data["time_works_place_address_mapping"] not in [None,[]]:
-                            list_obj_map = first_result_data["time_works_place_address_mapping"]
-                            for obj_map in list_obj_map:
-                                if inform_slot in obj_map:
-                                    if check_match_sublist_and_substring(confirm_obj[inform_slot],obj_map[inform_slot]):
-                                        check_match = True
+                    ####NEW: nếu count <= 1 thì lấy thông tin chung bình thường , ngược lại tìm cách chọn ra từ curent inform những giá trị để lọc , tuy nhiên khó 
+                    # khăn là nó vừa chứa giá trị inform từ agent (lẻ, trong hoặc ngoài) và giá trị inform từ user (cập nhật trong và ngoài)
+
+                    #### lấy ra value inform
+                    first_user_action = state_tracker.first_user_action
+
+                    count_special = 0
+                    if list(first_user_action['request_slots'].keys())[0] in special_keys:
+                        count_special = count_special + 1 
+                    for key, value in first_user_action['inform_slots'].items():
+                        # nếu là câu đầu tiên 
+                        if key in special_keys:
+                            count_special = count_special + 1
+                    
+                    ## nếu ít hơn 1 key đặc biệt (kể cả intent và ner) thì lấy từ thông tin chung
+                    if count_special <= 1:
+                        check_match = check_match_sublist_and_substring(confirm_obj[inform_slot],first_result_data[inform_slot])
+                        inform_value_list = first_result_data[inform_slot]
+                    else: ## nếu nhiều hơn thì xét cả thông tin chung và riêng
+                        match_all_condition_first_user_action = True
+                        ###kiểm tra thông tin chung
+                        for key in first_user_action['request_slots'].keys():
+                            if key in special_keys and not check_match_sublist_and_substring(first_user_action['inform_slots'][key], first_result_data[key]):
+                                match_all_condition_first_user_action = False
+                                break
+                        if match_all_condition_first_user_action: #
+                            check_match = check_match_sublist_and_substring(confirm_obj[inform_slot],first_result_data[inform_slot])
+                            inform_value_list = first_result_data[inform_slot]
+                        else: # kiểm tra thông tin riêng
+                            if "time_works_place_address_mapping" in first_result_data and first_result_data["time_works_place_address_mapping"] not in [None,[]]:
+                                list_obj_map = first_result_data["time_works_place_address_mapping"]
+                                for obj_map in list_obj_map:
+                                    check_match_obj = True
+                                    for key in first_user_action['request_slots'].keys():
+                                        if key in special_keys and not check_match_sublist_and_substring(first_user_action['inform_slots'][key], obj_map[key]):
+                                            check_match_obj = False
+                                            break
+                                    if check_match_obj == True:
+                                        check_match = check_match_sublist_and_substring(confirm_obj[inform_slot],obj_map[inform_slot])
+                                        inform_value_list = obj_map[inform_slot]
                                         break
 
                 value_match = ''
@@ -227,11 +259,11 @@ def response_craft(agent_action, state_tracker, confirm_obj, isGreeting=False):
             if inform_slot != "activity":
                 sentence_pattern = random.choice(MATCH_FOUND['found'])
                 sentence = sentence_pattern.replace("*found_slot*", AGENT_INFORM_OBJECT[inform_slot])
-                if len(first_result_data[inform_slot]) > 1:
-                    inform_value = ",\n".join(first_result_data[inform_slot])
+                if len(inform_value_list) > 1:
+                    inform_value = ",\n".join(inform_value_list)
                     sentence = sentence.replace("*found_slot_instance*", "\n\"{}\"".format(inform_value))
-                elif len(first_result_data[inform_slot]) == 1:
-                    inform_value = first_result_data[inform_slot][0]
+                elif len(inform_value_list) == 1:
+                    inform_value = inform_value_list[0]
                     sentence = sentence.replace("*found_slot_instance*", "\"{}\"".format(inform_value))
                 else: #slot mà user request của kết quả trả về là list rỗng  
                     # inform_value = "không có thông tin này"
@@ -239,6 +271,9 @@ def response_craft(agent_action, state_tracker, confirm_obj, isGreeting=False):
             else:
                 sentence = random.choice(MATCH_FOUND['found_activity'])
 
+
+
+            ### chỗ này cần chỉnh lại vì lỡ đâu user inform thêm thông tin 
             list_obj_map_match = []
             response_obj = ''
             if "time_works_place_address_mapping" in first_result_data and first_result_data["time_works_place_address_mapping"] not in [None,[]] and inform_slot in list_map_key:
