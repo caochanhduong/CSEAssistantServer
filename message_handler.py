@@ -16,12 +16,16 @@ import json
 from collections import OrderedDict
 import re
 from constants import *
-
+import datetime
 # imp.reload(real_dict)
 
 def sentence_to_index_vector(input_sentence):
   list_token=input_sentence.split(' ')
   return vocab.numericalize(list_token)
+
+def convert_from_unix_to_iso_format(input_unix_timestamp):
+    return datetime.datetime.fromtimestamp(input_unix_timestamp).strftime('%Y-%m-%d %H:%M:%S')
+
 
 def check_match_sublist_and_substring(list_children,list_parent):
         # print("match sublist")
@@ -37,6 +41,19 @@ def check_match_sublist_and_substring(list_children,list_parent):
             # print("match sublist")
             return True
         return False
+
+def check_match_time(list_children, list_parent):
+    if list_children == list_parent:
+        return True
+    if len(list_children) == 1 and len(list_parent) == 2:
+        if list_children[0] >= list_parent[0] and list_children[0] <= list_parent[1]:
+            return True
+    if len(list_children) == 2 and len(list_parent) == 2:
+        if list_children[0] >= list_parent[0] and list_children[1] <= list_parent[1]:
+            return True
+    return False
+
+
 
 def forward_dropout(input_sentence):
   t = torch.tensor([sentence_to_index_vector(input_sentence)])
@@ -951,9 +968,13 @@ def process_message_to_user_request(message,state_tracker):
     
     # print("-----------------------------user action")
     # print(user_action)
+    # Do chỉ có 1 phần tử  lúc parse từ NER nên lấy 0
     if "time" in user_action.keys():
         if user_action["time"] != []:
-            user_action["time"] = parse
+            user_action["time"] = parse_normalize_time(user_action["time"][0])
+    if "time" in confirm_obj.keys():
+        if confirm_obj["time"] != []:
+            confirm_obj["time"] = parse_normalize_time(confirm_obj["time"][0])
     return user_action, confirm_obj
 
 #TEST

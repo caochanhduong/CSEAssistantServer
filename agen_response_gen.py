@@ -1,6 +1,6 @@
 import re
 import random
-from message_handler import check_match_sublist_and_substring
+from message_handler import check_match_sublist_and_substring, check_match_time, convert_from_unix_to_iso_format
 from constants import list_map_key
 
 GREETING = [
@@ -80,9 +80,13 @@ INFORM['holder'] = [
     'Hoạt động này do *holder_instance* tổ chức đúng không nhỉ?',
     '*holder* là *holder_instance*, đúng không bạn?'
 ]
-INFORM['time'] = [
+INFORM['time_single'] = [
     '*time* mình tìm được với thông tin bạn đã cung cấp: *time_instance*',
     '*time* diễn ra là: *time_instance* đúng không bạn?'
+]
+INFORM['time_double'] = [
+    '*time* mình tìm được với thông tin bạn đã cung cấp: bắt đầu vào lúc *time_start_instance* và kết thúc vào lúc *time_end_instance*',
+    '*time* diễn ra là: bắt đầu vào lúc *time_start_instance* và kết thúc vào lúc *time_end_instance* đúng không bạn?'
 ]
 INFORM['address'] = [
     'Với thông tin bạn đã cung cấp thì mình thấy hoạt động này diễn ra ở *address_instance*',
@@ -139,6 +143,7 @@ AGENT_INFORM_OBJECT = {
 
 
 def response_craft(agent_action, state_tracker, confirm_obj,isGreeting=False):
+    sentence_pattern = None 
     if isGreeting:
         return random.choice(GREETING)
     agent_intent = agent_action['intent']
@@ -147,14 +152,26 @@ def response_craft(agent_action, state_tracker, confirm_obj,isGreeting=False):
         if agent_action['inform_slots'][inform_slot] == 'no match available':
             return random.choice(NOT_FOUND)
 
-        sentence_pattern = random.choice(INFORM[inform_slot])
-        sentence = sentence_pattern.replace("*{}*".format(inform_slot), AGENT_INFORM_OBJECT[inform_slot])
-        if len(agent_action['inform_slots'][inform_slot]) > 1:
-            inform_value = ",\n".join(agent_action['inform_slots'][inform_slot])
-            sentence = sentence.replace("*{}_instance*".format(inform_slot), "\n\"{}\"".format(inform_value))
+        if inform_slot != "time":
+            sentence_pattern = random.choice(INFORM[inform_slot])
+        else:
+            if len(agent_action['inform_slots'][inform_slot]) > 1: # == 2
+                sentence_pattern = random.choice(INFORM[inform_slot + '_double'])
+            elif len(agent_action['inform_slots'][inform_slot]) == 1:
+                sentence_pattern = random.choice(INFORM[inform_slot + '_single'])
 
+        sentence = sentence_pattern.replace("*{}*".format(inform_slot), AGENT_INFORM_OBJECT[inform_slot])
+
+
+        if len(agent_action['inform_slots'][inform_slot]) > 1:
+            if key != "time":
+                inform_value = ",\n".join(agent_action['inform_slots'][inform_slot])
+                sentence = sentence.replace("*{}_instance*".format(inform_slot), "\n\"{}\"".format(inform_value))
+            else:
+                inform_value = ",\n".join(agent_action['inform_slots'][inform_slot])
+                sentence = sentence.replace("*{}_start_instance*".format(inform_slot), "\n\"{}\"".format(inform_value[0]))
+                sentence = sentence.replace("*{}_end_instance*".format(inform_slot), "\n\"{}\"".format(inform_value[1]))
         elif len(agent_action['inform_slots'][inform_slot]) == 1:
-            
             inform_value = agent_action['inform_slots'][inform_slot][0]
             sentence = sentence.replace("*{}_instance*".format(inform_slot), "\"{}\"".format(inform_value))
         else:
@@ -183,38 +200,62 @@ def response_craft(agent_action, state_tracker, confirm_obj,isGreeting=False):
             # print("-------------------------------inform slot :{}".format(inform_slot))
             print("---------------------------------confirm obj: {}".format(confirm_obj))
             response_match = ''
+
+            ##TO DO : chỉnh lại confirm lúc so sánh time (ok)
             if confirm_obj != None:
                 if inform_slot not in list_map_key:
                     check_match = check_match_sublist_and_substring(confirm_obj[inform_slot],first_result_data[inform_slot])
                 else: #nếu là 4 key map
-                    check_match = check_match_sublist_and_substring(confirm_obj[inform_slot],first_result_data[inform_slot])
+                    if inform_slot != "time":
+                        check_match = check_match_sublist_and_substring(confirm_obj[inform_slot],first_result_data[inform_slot])
+                    else:
+                        check_match = check_match_time(confirm_obj[inform_slot],first_result_data[inform_slot])
                     # neu chưa match với key chung thì tìm trong map
                     if not check_match:
                         if "time_works_place_address_mapping" in first_result_data and first_result_data["time_works_place_address_mapping"] not in [None,[]]:
                             list_obj_map = first_result_data["time_works_place_address_mapping"]
                             for obj_map in list_obj_map:
                                 if inform_slot in obj_map:
-                                    if check_match_sublist_and_substring(confirm_obj[inform_slot],obj_map[inform_slot]):
-                                        check_match = True
-                                        break
+                                    if inform_slot != "time":
+                                        if check_match_sublist_and_substring(confirm_obj[inform_slot],obj_map[inform_slot]):
+                                            check_match = True
+                                            break
+                                    else:
+                                        if check_match_time(confirm_obj[inform_slot],obj_map[inform_slot]):
+                                            check_match = True
+                                            break
 
                 value_match = ''
                 if len(confirm_obj[inform_slot]) > 1:
-                    value_match = ',\n'.join(confirm_obj[inform_slot])
+                    if inform_slot != "time":
+                        value_match = ',\n'.join(confirm_obj[inform_slot])
+                    else:
+                        value_match = 'bắt đầu từ {0} và kết thúc lúc {1}'.format(convert_from_unix_to_iso_format(confirm_obj[inform_slot][0]),convert_from_unix_to_iso_format(confirm_obj[inform_slot][1]))
                 else:
-                    value_match = confirm_obj[inform_slot][0]
+                    if inform_slot != "time":
+                        value_match = confirm_obj[inform_slot][0]
+                    else:
+                        value_match = convert_from_unix_to_iso_format(confirm_obj[inform_slot][0])
                 if check_match:
                     response_match = "\n \n Đúng rồi! {0} là {1}".format(AGENT_INFORM_OBJECT[inform_slot],value_match)
                 else:
                     response_match = "\n \n Sai rồi! {0} không là {1}".format(AGENT_INFORM_OBJECT[inform_slot],value_match)
+
+
             if inform_slot != "activity":
                 sentence_pattern = random.choice(MATCH_FOUND['found'])
                 sentence = sentence_pattern.replace("*found_slot*", AGENT_INFORM_OBJECT[inform_slot])
                 if len(first_result_data[inform_slot]) > 1:
-                    inform_value = ",\n".join(first_result_data[inform_slot])
+                    if inform_slot != "time":
+                        inform_value = ",\n".join(first_result_data[inform_slot])
+                    else:
+                        inform_value = "bắt đầu từ {0} và kết thúc lúc {1}".join(convert_from_unix_to_iso_format(first_result_data[inform_slot][0]),convert_from_unix_to_iso_format(first_result_data[inform_slot][1]))
                     sentence = sentence.replace("*found_slot_instance*", "\n\"{}\"".format(inform_value))
                 elif len(first_result_data[inform_slot]) == 1:
-                    inform_value = first_result_data[inform_slot][0]
+                    if inform_slot != "time":
+                        inform_value = first_result_data[inform_slot][0]
+                    else:
+                        inform_value = convert_from_unix_to_iso_format(first_result_data[inform_slot][0])
                     sentence = sentence.replace("*found_slot_instance*", "\"{}\"".format(inform_value))
                 else: #slot mà user request của kết quả trả về là list rỗng  
                     # inform_value = "không có thông tin này"
@@ -224,6 +265,8 @@ def response_craft(agent_action, state_tracker, confirm_obj,isGreeting=False):
 
             list_obj_map_match = []
             response_obj = ''
+
+            ## TO DO :chỉnh lại lúc lấy object từ điều kiện 
             if "time_works_place_address_mapping" in first_result_data and first_result_data["time_works_place_address_mapping"] not in [None,[]] and inform_slot in list_map_key:
                 current_informs = state_tracker.current_informs
                 print("--------------------------current informs : {0}".format(current_informs))
@@ -232,9 +275,15 @@ def response_craft(agent_action, state_tracker, confirm_obj,isGreeting=False):
                     check_match = True
                     for map_key in list_map_key:
                         if map_key in current_informs:
-                            if current_informs[map_key] != "anything" and not check_match_sublist_and_substring(current_informs[map_key],obj_map[map_key]):
-                                check_match = False
-                                break
+                            if map_key != "time":
+                                if current_informs[map_key] != "anything" and not check_match_sublist_and_substring(current_informs[map_key],obj_map[map_key]):
+                                    check_match = False
+                                    break
+                            else:
+                                if current_informs[map_key] != "anything" and not check_match_time(current_informs[map_key],obj_map[map_key]):
+                                    check_match = False
+                                    break
+                                
                     if check_match and obj_map not in list_obj_map_match:
                         list_obj_map_match.append(obj_map)
 
@@ -243,9 +292,16 @@ def response_craft(agent_action, state_tracker, confirm_obj,isGreeting=False):
                 for obj_map_match in list_obj_map_match:
                     response_obj += "************************************************* \n"
                     for key in list_map_key:
-                        response_obj += "+ {0} : {1} \n".format(AGENT_INFORM_OBJECT[key], ', '.join(obj_map_match[key]))
-
-
+                        if key != "time":
+                            value_obj_inform = ', '.join(obj_map_match[key])
+                        else:
+                            if len(obj_map_match[key]) == 1:
+                                value_obj_inform = convert_from_unix_to_iso_format(obj_map_match[key])
+                            else if len(obj_map_match[key]) > 1:
+                                value_obj_inform = "bắt đầu từ {0} và kết thúc lúc {1}".join(convert_from_unix_to_iso_format(obj_map_match[key][0]),convert_from_unix_to_iso_format(obj_map_match[key][1]))
+                            else:
+                                value_obj_inform = ''
+                        response_obj += "+ {0} : {1} \n".format(AGENT_INFORM_OBJECT[key],value_obj_inform)
             # print(sentence)
             sentence += "\n" + response_obj + response_match
             print("-----------------------------match sentence")
