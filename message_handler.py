@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
-# from agent_utils.state_tracker import StateTracker
+from agent_utils.state_tracker import StateTracker
 from sklearn.externals import joblib
 import numpy as np
 from sklearn import preprocessing
@@ -17,6 +17,8 @@ from collections import OrderedDict
 import re
 from constants import *
 import datetime
+from time_normalizer import factory
+# from api_conversation_manager import database
 # imp.reload(real_dict)
 
 def sentence_to_index_vector(input_sentence):
@@ -43,13 +45,18 @@ def check_match_sublist_and_substring(list_children,list_parent):
         return False
 
 def check_match_time(list_children, list_parent):
+    print("----------list_children")
+    print(list_children)
+    print("----------list_parent")
+    print(list_parent)
+
     if list_children == list_parent:
         return True
-    if len(list_children) == 1 and len(list_parent) == 2:
-        if list_children[0] >= list_parent[0] and list_children[0] <= list_parent[1]:
+    if len(list_children) == 1 and len(list_parent) != 0:
+        if list_children[0] <= list_parent[0]:
             return True
     if len(list_children) == 2 and len(list_parent) == 2:
-        if list_children[0] >= list_parent[0] and list_children[1] <= list_parent[1]:
+        if list_children[0] <= list_parent[0] and list_children[1] >= list_parent[1]:
             return True
     return False
 
@@ -623,8 +630,8 @@ def find_all_entity(intent,input_sentence):
     print(normalized_input_sentence)
     if 'time' in list_order_entity_name:
         for pattern_time in list_pattern_time:
+            print("pattern_time :{0}".format(pattern_time))
             if re.findall(pattern_time,normalized_input_sentence)!=[]:
-                # print("pattern_time :{0}".format(pattern_time))
                 if 'time' not in result_entity_dict:
                     result_entity_dict['time'] = delete_last_space_list(re.findall(pattern_time,normalized_input_sentence))
                 else:
@@ -964,17 +971,36 @@ def process_message_to_user_request(message,state_tracker):
             for key in user_action["inform_slots"].keys():
                 if isinstance(user_action["inform_slots"][key],list):
                     for i in range(len(user_action["inform_slots"][key])):
-                        user_action["inform_slots"][key][i] = preprocess_message(user_action["inform_slots"][key][i])
+                        if isinstance(user_action["inform_slots"][key][i],str):
+                            user_action["inform_slots"][key][i] = preprocess_message(user_action["inform_slots"][key][i])
+                        else:
+                            user_action["inform_slots"][key][i] = user_action["inform_slots"][key][i]
     
-    # print("-----------------------------user action")
-    # print(user_action)
+    print("-----------------------------user action")
+    print(user_action)
     # Do chỉ có 1 phần tử  lúc parse từ NER nên lấy 0
-    if "time" in user_action.keys():
-        if user_action["time"] != []:
-            user_action["time"] = parse_normalize_time(user_action["time"][0])
-    if "time" in confirm_obj.keys():
-        if confirm_obj["time"] != []:
-            confirm_obj["time"] = parse_normalize_time(confirm_obj["time"][0])
+    if "time" in user_action['inform_slots'].keys():
+        if user_action['inform_slots']["time"] != []:
+            if isinstance(user_action['inform_slots']["time"][0],str):
+                result = factory.processRawDatetimeInput(user_action['inform_slots']["time"][0])
+                if result != []:
+                    unix = [obj.convertToUnix() for obj in result]
+                    user_action['inform_slots']["time"] = unix
+                else:
+                    del user_action['inform_slots']["time"]
+
+    if confirm_obj != None:
+        if "time" in confirm_obj.keys():
+            if confirm_obj["time"] != []:
+                if isinstance(confirm_obj["time"][0],str):
+                    result = factory.processRawDatetimeInput(confirm_obj["time"][0])
+                    if result != []:
+                        unix = [obj.convertToUnix() for obj in result]
+                        confirm_obj["time"] = unix
+                    else:
+                        confirm_obj["time"]
+    print("-----------------------------user action after")
+    print(user_action)
     return user_action, confirm_obj
 
 #TEST
@@ -1008,5 +1034,5 @@ if __name__ == '__main__':
     # print(list_extra_word)
     # print(vocab.stoi["sẻ"])
     # state_tracker = StateTracker(database, constants)
-    # process_message_to_user_request("cho mình hỏi đối tượng tham gia của hoạt động an toàn thực phẩm và an ninh lương thực",state_tracker)
+    # process_message_to_user_request("cho mình hỏi thời gian của hoạt động mùa hè xanh cuối tháng 8 với",state_tracker)
     pass

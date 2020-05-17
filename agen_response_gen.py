@@ -164,11 +164,11 @@ def response_craft(agent_action, state_tracker, confirm_obj,isGreeting=False):
 
 
         if len(agent_action['inform_slots'][inform_slot]) > 1:
-            if key != "time":
+            if inform_slot != "time":
                 inform_value = ",\n".join(agent_action['inform_slots'][inform_slot])
                 sentence = sentence.replace("*{}_instance*".format(inform_slot), "\n\"{}\"".format(inform_value))
             else:
-                inform_value = ",\n".join(agent_action['inform_slots'][inform_slot])
+                inform_value = [convert_from_unix_to_iso_format(x) for x in agent_action['inform_slots'][inform_slot]]
                 sentence = sentence.replace("*{}_start_instance*".format(inform_slot), "\n\"{}\"".format(inform_value[0]))
                 sentence = sentence.replace("*{}_end_instance*".format(inform_slot), "\n\"{}\"".format(inform_value[1]))
         elif len(agent_action['inform_slots'][inform_slot]) == 1:
@@ -230,16 +230,22 @@ def response_craft(agent_action, state_tracker, confirm_obj,isGreeting=False):
                     if inform_slot != "time":
                         value_match = ',\n'.join(confirm_obj[inform_slot])
                     else:
-                        value_match = 'bắt đầu từ {0} và kết thúc lúc {1}'.format(convert_from_unix_to_iso_format(confirm_obj[inform_slot][0]),convert_from_unix_to_iso_format(confirm_obj[inform_slot][1]))
+                        value_match = 'nằm trong khoảng bắt đầu từ {0} và kết thúc lúc {1}'.format(convert_from_unix_to_iso_format(confirm_obj[inform_slot][0]),convert_from_unix_to_iso_format(confirm_obj[inform_slot][1]))
                 else:
                     if inform_slot != "time":
                         value_match = confirm_obj[inform_slot][0]
                     else:
                         value_match = convert_from_unix_to_iso_format(confirm_obj[inform_slot][0])
                 if check_match:
-                    response_match = "\n \n Đúng rồi! {0} là {1}".format(AGENT_INFORM_OBJECT[inform_slot],value_match)
+                    if inform_slot != "time":
+                        response_match = "\n \n Đúng rồi! {0} là {1}".format(AGENT_INFORM_OBJECT[inform_slot],value_match)
+                    else:
+                        response_match = "\n \n Đúng rồi! {0} là sau thời gian {1}".format(AGENT_INFORM_OBJECT[inform_slot],value_match)
                 else:
-                    response_match = "\n \n Sai rồi! {0} không là {1}".format(AGENT_INFORM_OBJECT[inform_slot],value_match)
+                    if inform_slot != "time":
+                        response_match = "\n \n Sai rồi! {0} không là {1}".format(AGENT_INFORM_OBJECT[inform_slot],value_match)
+                    else:
+                        response_match = "\n \n Sai rồi! {0} không là sau thời gian {1}".format(AGENT_INFORM_OBJECT[inform_slot],value_match)
 
 
             if inform_slot != "activity":
@@ -249,7 +255,7 @@ def response_craft(agent_action, state_tracker, confirm_obj,isGreeting=False):
                     if inform_slot != "time":
                         inform_value = ",\n".join(first_result_data[inform_slot])
                     else:
-                        inform_value = "bắt đầu từ {0} và kết thúc lúc {1}".join(convert_from_unix_to_iso_format(first_result_data[inform_slot][0]),convert_from_unix_to_iso_format(first_result_data[inform_slot][1]))
+                        inform_value = "bắt đầu từ {0} và kết thúc lúc {1}".format(convert_from_unix_to_iso_format(first_result_data[inform_slot][0]),convert_from_unix_to_iso_format(first_result_data[inform_slot][1]))
                     sentence = sentence.replace("*found_slot_instance*", "\n\"{}\"".format(inform_value))
                 elif len(first_result_data[inform_slot]) == 1:
                     if inform_slot != "time":
@@ -296,9 +302,9 @@ def response_craft(agent_action, state_tracker, confirm_obj,isGreeting=False):
                             value_obj_inform = ', '.join(obj_map_match[key])
                         else:
                             if len(obj_map_match[key]) == 1:
-                                value_obj_inform = convert_from_unix_to_iso_format(obj_map_match[key])
-                            else if len(obj_map_match[key]) > 1:
-                                value_obj_inform = "bắt đầu từ {0} và kết thúc lúc {1}".join(convert_from_unix_to_iso_format(obj_map_match[key][0]),convert_from_unix_to_iso_format(obj_map_match[key][1]))
+                                value_obj_inform = convert_from_unix_to_iso_format(obj_map_match[key][0])
+                            elif len(obj_map_match[key]) > 1:
+                                value_obj_inform = "bắt đầu từ {0} và kết thúc lúc {1}".format(convert_from_unix_to_iso_format(obj_map_match[key][0]),convert_from_unix_to_iso_format(obj_map_match[key][1]))
                             else:
                                 value_obj_inform = ''
                         response_obj += "+ {0} : {1} \n".format(AGENT_INFORM_OBJECT[key],value_obj_inform)

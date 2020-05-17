@@ -199,7 +199,7 @@ class DBQuery:
         print("-----------------------------------KET QUA")
         
         for result in results:
-            print(result)
+            # print(result)
             #đổi từ object id sang string và dùng id đó làm key (thay vì dùng index của mảng để làm key vì không xác định đc index)
             result["_id"] = str(result["_id"])
             available_options.update({result['_id']:result})
@@ -316,29 +316,69 @@ class DBQuery:
                 if list_pattern != []:
                     list_and_out.append({k: {"$all": list_pattern}})
             else:
-                for value in values:
-                    list_and_in.append({
-                        "$or" : [
-                                    {
-                                        k: {
-                                            "$all": [re.compile(".*{0}.*".format(value))]
-                                        }
-                                    },
-                                    {    
-                                        "time_works_place_address_mapping": {
-                                            "$all": [
-                                                        {
-                                                            "$elemMatch": {
-                                                                    k: {
-                                                                        "$all": [re.compile(".*{0}.*".format(value))]
-                                                                    }
+                if k!="time":
+                    for value in values:
+                        list_and_in.append({
+                            "$or" : [
+                                        {
+                                            k: {
+                                                "$all": [re.compile(".*{0}.*".format(value))]
+                                            }
+                                        },
+                                        {    
+                                            "time_works_place_address_mapping": {
+                                                "$all": [
+                                                            {
+                                                                "$elemMatch": {
+                                                                        k: {
+                                                                            "$all": [re.compile(".*{0}.*".format(value))]
+                                                                        }
+                                                                }
                                                             }
-                                                        }
-                                                    ]
+                                                        ]
+                                            }
                                         }
-                                    }
-                                ]
-                    })
+                                    ]
+                        })
+                else:
+                    if len(values) == 2: 
+                        list_and_in.append({
+                            "$or" : [
+                                {
+                                    k: { "$elemMatch" : {"$gte": values[0],"$lte": values[1]} }
+                                },
+                                {
+                                    "time_works_place_address_mapping": {
+                                                    "$all": [
+                                                                {
+                                                                    "$elemMatch": {
+                                                                       k: { "$elemMatch" : {"$gte": values[0],"$lte": values[1]} }
+                                                                    }
+                                                                }
+                                                            ]
+                                                }
+                                }
+                            ]
+                        })
+                    if len(values) == 1: 
+                        list_and_in.append({
+                            "$or" : [
+                                {
+                                    k: { "$size": 1, "$elemMatch" : {"$gte": values[0]} }
+                                },
+                                {
+                                    "time_works_place_address_mapping": {
+                                                    "$all": [
+                                                                {
+                                                                    "$elemMatch": {
+                                                                       k: { "$size": 1, "$elemMatch" : {"$gte": values[0]} }
+                                                                    }
+                                                                }
+                                                            ]
+                                                }
+                                }
+                            ]
+                        })
 
         if list_and_in != []:
             list_and_out.append({"$and": list_and_in})
@@ -354,5 +394,5 @@ class DBQuery:
 # client = MongoClient('mongodb://caochanhduong:bikhungha1@ds261626.mlab.com:61626/activity?retryWrites=false')
 # database = client.activity
 # dbquery = DBQuery(database)
-# print(dbquery.get_db_results({"name_activity":["đêm vui tất niên tết ấm áp","c"],"time":["10h","15/01/19"],"works": ["ức"]}))
-# print(dbquery.convert_to_regex_constraint({"name_activity":["đêm vui tất niên tết ấm áp"],"time":["10h","15/01/20"]}))
+# print(dbquery.get_db_results({"name_activity":["mùa hè xanh"],"time":[1588870800]}))
+# # print(dbquery.convert_to_regex_constraint({"name_activity":["đêm vui tất niên tết ấm áp"],"time":["10h","15/01/20"]}))
