@@ -53,7 +53,7 @@ with open(CONSTANT_FILE_PATH) as f:
 # client = MongoClient()
 client = MongoClient('mongodb://caochanhduong:bikhungha1@ds261626.mlab.com:61626/activity?retryWrites=false')
 database = client.activity
-
+messages = database.messages
 
 # state_tracker = StateTracker(database, constants)
 # dqn_agent = DQNAgent(state_tracker.get_state_size(), constants)    
@@ -122,18 +122,22 @@ def url_error(e):
 def server_error(e):
     return msg(500, "SERVER ERROR")
 
-
-@app.route('/api/LT-conversation-manager', methods=['POST'])
-def post_api():
-    input_data = request.get_json(force=True)
-    print(input_data)
-    if "message" not in input_data.keys():
+@app.route('/api/cse-assistant-conversation-manager/suggest-question', methods=['POST'])
+def suggest_question():
+    input_data = request.json
+    
+    if "message" not in input_data.keys(): 
         return msg(400, "Message cannot be None")
     else:
         message = input_data["message"]
-        result, probability = extract_and_get_intent(message)
-        probability = probability.tolist()
-    return jsonify({"code": 200, "message": result, "probability": probability})
+    print("-------------------------message")
+    print(message)
+    result_cursor = messages.find({"$text": {"$search": message}}).limit(5)
+    result = []
+    for res in result_cursor:
+        result.append(res['message'])
+    return jsonify({"code": 200, "result": result})
+
 
 @app.route('/api/cse-assistant-conversation-manager', methods=['POST'])
 def post_api_cse_assistant():
@@ -205,56 +209,6 @@ def post_api_cse_assistant_reset_state_tracker():
         code = 404
     K.clear_session()
     return jsonify({"code": code, "message": message,"state_tracker_id":state_tracker_id})
-
-
-@app.route('/api/LT-conversation-manager/extract-information', methods=['POST'])
-def post_api_extract_information():
-    input_data = request.json
-    print(input_data)
-    if "message" not in input_data.keys():
-        return msg(400, "Message cannot be None")
-    else:
-        message = input_data["message"]
-        print(message)
-        emails, phones, names = extract_information(message)
-        print(emails)
-        print(phones)
-    return jsonify({"code": 200, "emails": emails, "phones": phones, "names": names})
-
-
-@app.route("/api/LT-conversation-manager/messages", methods=['POST'])
-def user_profile():
-    input_data = request.json
-    print(input_data)
-    if "message" not in input_data.keys():
-        return msg(400, "Message cannot be None")
-    if "intent" not in input_data.keys():
-        return msg(400, "Intent cannot be None")
-    user_id = input_data["user_id"]
-    message = input_data["message"]
-    intent = input_data["intent"]
-    is_correct = input_data["is_correct"]
-
-    mongo.db.messages.insert_one(
-        {"user_id": user_id, "message": message, "intent": intent, "is_correct": is_correct})
-        
-    return jsonify({"code": 200, "message": "insert successed!"})
-
-@app.route('/api/LT-conversation-manager/classify-message', methods=['POST'])
-def post_api_classify_message():
-    input_data = request.get_json(force=True)
-    print(input_data)
-    if "message" not in input_data.keys():
-        return msg(400, "Message cannot be None")
-    else:
-        message = input_data["message"]
-        # if check_question(message):
-        #     result, probability = extract_and_get_intent(message)
-        # else:
-        #     result=""
-        result, probability = extract_and_get_intent(message)
-    return jsonify({"is_question": check_question(message), "intent": result})
-
 
 if __name__ == '__main__':
     app.run()

@@ -172,7 +172,10 @@ def response_craft(agent_action, state_tracker, confirm_obj,isGreeting=False):
                 sentence = sentence.replace("*{}_start_instance*".format(inform_slot), "\n\"{}\"".format(inform_value[0]))
                 sentence = sentence.replace("*{}_end_instance*".format(inform_slot), "\n\"{}\"".format(inform_value[1]))
         elif len(agent_action['inform_slots'][inform_slot]) == 1:
-            inform_value = agent_action['inform_slots'][inform_slot][0]
+            if inform_slot != "time":
+                inform_value = agent_action['inform_slots'][inform_slot][0]
+            else:
+                inform_value = convert_from_unix_to_iso_format(agent_action['inform_slots'][inform_slot][0])
             sentence = sentence.replace("*{}_instance*".format(inform_slot), "\"{}\"".format(inform_value))
         else:
             sentence_pattern = random.choice(EMPTY_SLOT)
