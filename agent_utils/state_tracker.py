@@ -29,6 +29,7 @@ class StateTracker:
         self.none_state = np.zeros(self.get_state_size())
         self.reset()
         self.current_request_slots = []
+        self.current_results = []
 
     def get_state_size(self):
         """Returns the state size of the state representation used by the agent."""
@@ -207,7 +208,7 @@ class StateTracker:
             # print("intent: inform, current inform_slots: {}".format(self.current_informs))
             # print("current request slot: {}".format(self.current_request_slots))
 
-            inform_slots = self.db_helper.fill_inform_slot(agent_action['inform_slots'], self.current_informs)
+            inform_slots, self.current_results = self.db_helper.fill_inform_slot(agent_action['inform_slots'], self.current_informs)
             agent_action['inform_slots'] = inform_slots
             assert agent_action['inform_slots']
             key, value = list(agent_action['inform_slots'].items())[0]  # Only one

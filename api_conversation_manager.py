@@ -156,9 +156,12 @@ def post_api_cse_assistant():
     # print(StateTracker_Container)
     K.clear_session()
     current_informs = 'null'
+    current_results = []
     agent_message , agent_action = process_conversation_POST(state_tracker_id, message)
     if agent_action['intent'] in ["match_found","inform"]:
         current_informs = StateTracker_Container[state_tracker_id][0].current_informs
+        if agent_action['intent'] == "inform":
+            current_results = StateTracker_Container[state_tracker_id][0].current_results
     
     # ###########begin modify
     if agent_action['intent'] == "match_found":
@@ -167,7 +170,7 @@ def post_api_cse_assistant():
             first_result_data = agent_action['inform_slots'][activity_key][0]
             if first_result_data["time"] != []:
                 first_result_data["time"] = [convert_from_unix_to_iso_format(x) for x in first_result_data["time"]]
-            if "time_works_place_address_mapping" in first_result_data and first_result_data["time_works_place_address_mapping"] not in [None,[]]:
+            if "time_works_place_address_mapping" in first_result_data and first_result_data["time_works_place_address_mapping"] is not None:
                 list_obj_map = first_result_data["time_works_place_address_mapping"]
                 list_result_obj_map = []
                 for obj_map in list_obj_map:
@@ -178,8 +181,11 @@ def post_api_cse_assistant():
             agent_action['inform_slots'][activity_key][0] = first_result_data
 
     ################end modify
+
+    print("---------------------------current result")
+    print(current_results)
     K.clear_session()
-    return jsonify({"code": 200, "message": agent_message,"state_tracker_id":state_tracker_id,"agent_action":agent_action,"current_informs":current_informs})
+    return jsonify({"code": 200, "message": agent_message,"state_tracker_id":state_tracker_id,"agent_action":agent_action,"current_informs":current_informs,"current_results":current_results})
 
 @app.route('/api/cse-assistant-conversation-manager/reset-state-tracker', methods=['POST'])
 def post_api_cse_assistant_reset_state_tracker():

@@ -88,11 +88,15 @@ class DBQuery:
                     db_results_no_empty[i] = copy.deepcopy(data)
       
         filled_inform = {}
+        db_results_search = {}
+        current_results = []
         if db_results_no_empty:
             values_dict = self._count_slot_values(key, db_results_no_empty)
+            db_results_search = db_results_no_empty
             # printprint("INFORM: filtered out, values_dict: {}".format(values_dict))
         else:
             values_dict = self._count_slot_values(key, db_results)
+            db_results_search = db_results_no_empty
             # print("INFORM: can not filtered out, values_dict: {}".format(values_dict))
 
         if key == usersim_default_key:
@@ -103,7 +107,17 @@ class DBQuery:
         else:
             filled_inform[key] = 'no match available'
 
-        return filled_inform
+        value_search = filled_inform[key]
+        ## counter for limit 5 activities
+        counter = 0
+        if isinstance(value_search, list):
+            for id in db_results_search.keys():
+                if counter > 5:
+                    break
+                current_results.append(db_results_search[id])
+                counter = counter + 1
+
+        return filled_inform, current_results
  
     def _count_slot_values(self, key, db_subdict):
         """
