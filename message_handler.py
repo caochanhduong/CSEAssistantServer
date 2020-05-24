@@ -627,10 +627,10 @@ def find_all_entity(intent,input_sentence):
     
     result_entity_dict={}
     list_order_entity_name = map_intent_to_list_order_entity_name[intent]
-    print(normalized_input_sentence)
+    # print(normalized_input_sentence)
     if 'time' in list_order_entity_name:
         for pattern_time in list_pattern_time:
-            print("pattern_time :{0}".format(pattern_time))
+            # print("pattern_time :{0}".format(pattern_time))
             if re.findall(pattern_time,normalized_input_sentence)!=[]:
                 if 'time' not in result_entity_dict:
                     result_entity_dict['time'] = delete_last_space_list(re.findall(pattern_time,normalized_input_sentence))
@@ -641,7 +641,7 @@ def find_all_entity(intent,input_sentence):
         # if 'time' in result_entity_dict:
         #     print(result_entity_dict['time'])
     if 'reward' in list_order_entity_name:
-        print("hellllllllllllllllllo")
+        # print("hellllllllllllllllllo")
         for pattern_reward in list_pattern_reward:
             if re.findall(pattern_reward,normalized_input_sentence)!=[]:
                 # print("pattern_reward :{0}".format(pattern_reward))
@@ -672,9 +672,9 @@ def find_all_entity(intent,input_sentence):
     for entity_name in map_intent_to_list_order_entity_name[intent]:
         ordered_real_dict[entity_name] = real_dict[entity_name]
     for entity_name, list_entity in ordered_real_dict.items():
-        print(entity_name)
+        # print(entity_name)
         list_entity = [preprocess_message(entity) for entity in list_entity]
-        print("input sentence: {0}".format(normalized_input_sentence))
+        # print("input sentence: {0}".format(normalized_input_sentence))
         if entity_name in ["works","register","reward"]:
             matching_threshold = 0.5
         elif entity_name == "joiner":
@@ -795,8 +795,8 @@ def find_all_entity(intent,input_sentence):
 #             print("end_common_index: {0}".format(end_common_index))
 #             print("1. greatest_common_length : {0}".format(greatest_common_length))
             # print(max_match_entity)
-            if greatest_entity_index != None:
-                print("2. greatest entity : {0}".format(list_entity[greatest_entity_index]))
+            # if greatest_entity_index != None:
+                # print("2. greatest entity : {0}".format(list_entity[greatest_entity_index]))
 #             print("2.1 greatest_end_common_index: {0}".format(greatest_end_common_index))
 #             print("3. sentence match: {0}".format(list_sentence_token[greatest_end_common_index - greatest_common_length +1 :greatest_end_common_index +1]))
             
@@ -873,7 +873,7 @@ def find_all_entity(intent,input_sentence):
                     list_sentence_token[greatest_end_common_index - greatest_common_length +1 :greatest_end_common_index +1] = ["✪"]*greatest_common_length
                     normalized_input_sentence = ' '.join(list_sentence_token)
             catch_entity_threshold_loop = catch_entity_threshold_loop + 1
-            print("output sentence: {0}".format(normalized_input_sentence))
+            # print("output sentence: {0}".format(normalized_input_sentence))
         # print("result entity dict : {0}".format(result_entity_dict))
         
         #sau khi bắt xong hết các name_activity thì xóa hết indicator của joiner: được tham gia,được đi,vv
@@ -976,8 +976,8 @@ def process_message_to_user_request(message,state_tracker):
                         else:
                             user_action["inform_slots"][key][i] = user_action["inform_slots"][key][i]
     
-    print("-----------------------------user action")
-    print(user_action)
+    # print("-----------------------------user action")
+    # print(user_action)
     # Do chỉ có 1 phần tử  lúc parse từ NER nên lấy 0
     if "time" in user_action['inform_slots'].keys():
         if user_action['inform_slots']["time"] != []:

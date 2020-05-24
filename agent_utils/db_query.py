@@ -56,7 +56,7 @@ class DBQuery:
         Returns:
             dict: inform_slot_to_fill filled with values
         """
- 
+        print("-----------------------------fill_inform_slot")
         # For this simple system only one inform slot should ever passed in
         assert len(inform_slot_to_fill) == 1
  
@@ -130,7 +130,8 @@ class DBQuery:
         Returns:
             dict: The values and their occurrences given the key
         """
- 
+        print("-----------------------------_count_slot_values")
+
         slot_values = defaultdict(int)  # init to 0
         for id in db_subdict.keys():
             current_option_dict = db_subdict[id]
@@ -184,7 +185,8 @@ class DBQuery:
         Returns:
             dict: The available items in the database
         """
- 
+        print("-----------------------------get_db_results")
+
         # Filter non-queryable items and keys with the value 'anything' since those are inconsequential to the constraints
         new_constraints = {k: v for k, v in constraints.items() if k not in self.no_query and v != 'anything' and v != 'no match available'}
         # print("-----------------------------------DIEU KIEN")
@@ -254,7 +256,8 @@ class DBQuery:
         Returns:
             dict: Each key in current_informs with the count of the number of matches for that key
         """
- 
+        print("-----------------------------get_db_results_for_slots")
+
         # The items (key, value) of the current informs are used as a key to the cached_db_slot
         # print()
         # print(type(self.cached_db_slot))
@@ -317,6 +320,8 @@ class DBQuery:
     #     return regex_constraint_dict
 
     def convert_to_regex_constraint(self, constraints):
+        print("-----------------------------convert_to_regex_constraint")
+
         list_and_out = []
         list_and_in = []
         ele_match_obj = {}

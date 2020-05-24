@@ -53,7 +53,7 @@ with open(CONSTANT_FILE_PATH) as f:
 # client = MongoClient()
 client = MongoClient('mongodb://caochanhduong:bikhungha1@ds261626.mlab.com:61626/activity?retryWrites=false')
 database = client.activity
-messages = database.messages
+suggest_messages = database.suggest_messages
 
 # state_tracker = StateTracker(database, constants)
 # dqn_agent = DQNAgent(state_tracker.get_state_size(), constants)    
@@ -132,7 +132,7 @@ def suggest_question():
         message = input_data["message"]
     print("-------------------------message")
     print(message)
-    result_cursor = messages.find({"$text": {"$search": message}}).limit(5)
+    result_cursor = suggest_messages.find({"$text": {"$search": message}}).limit(5)
     result = []
     for res in result_cursor:
         result.append(res['message'])

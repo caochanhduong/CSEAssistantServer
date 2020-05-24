@@ -257,8 +257,8 @@ class StateTracker:
         agent_action.update({'round': self.round_num, 'speaker': 'Agent'})
         
         self.history.append(agent_action)
-        print("------------------------------------history in update state agent")
-        print(self.history)
+        # print("------------------------------------history in update state agent")
+        # print(self.history)
 
     def update_state_user(self, user_action):
         """
@@ -311,5 +311,5 @@ class StateTracker:
         user_action.update({'round': self.round_num, 'speaker': 'User'})
         self.history.append(user_action)
         self.round_num += 1
-        print("---------------------------------------------history in update state user")
-        print(self.history)
+        # print("---------------------------------------------history in update state user")
+        # print(self.history)
