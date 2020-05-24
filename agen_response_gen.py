@@ -63,9 +63,15 @@ REQUEST['name_place'] = [
     'Tại *name_place* nào bạn?',
     'Cho mình xin cụ thể *name_place* với!'
 ]
+
 REQUEST['works'] = [
     'Bạn liệt kê một số *works* trong hoạt động được không?',
     'Bạn kể ra một vài *works* trong đó được không?'
+]
+
+REQUEST_REPEAT = [
+    'Thông tin *request_key* bạn nhập vào chưa rõ ràng, bạn cung cấp lại giúp mình thông tin này nhé! ',
+    'Rất tiếc, thông tin *request_key* bạn nhập vào mình vẫn chưa rõ, bạn vui lòng cung cấp lại thông tin này giúp mình nhé!'
 ]
 INFORM = {}
 INFORM['name_activity'] = [
@@ -183,9 +189,19 @@ def response_craft(agent_action, state_tracker, confirm_obj,isGreeting=False):
         # print(sentence_pattern)
     elif agent_intent == "request":
         request_slot = list(agent_action['request_slots'].keys())[0]
-        sentence_pattern = random.choice(REQUEST[request_slot])
-        sentence = sentence_pattern.replace("*{}*".format(request_slot), AGENT_REQUEST_OBJECT[request_slot])
-        # print(sentence_pattern)
+        check_request_repeat = False
+        list_agent_request = state_tracker.list_agent_request
+        for i in range(len(list_agent_request) - 1):
+            history_request_slot = list(list_agent_request[i]['request_slots'].keys())[0]
+            if history_request_slot == request_slot:
+                check_request_repeat = True
+        if check_request_repeat:
+            sentence_pattern = random.choice(REQUEST_REPEAT)
+            sentence = sentence_pattern.replace('*request_key*', AGENT_REQUEST_OBJECT[request_slot])
+        else:
+            sentence_pattern = random.choice(REQUEST[request_slot])
+            sentence = sentence_pattern.replace("*{}*".format(request_slot), AGENT_REQUEST_OBJECT[request_slot])
+            # print(sentence_pattern)
     elif agent_intent == "done":
         return random.choice(DONE)
     elif agent_intent == "match_found":

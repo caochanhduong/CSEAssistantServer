@@ -30,6 +30,7 @@ class StateTracker:
         self.reset()
         self.current_request_slots = []
         self.current_results = []
+        self.list_agent_request = []
 
     def get_state_size(self):
         """Returns the state size of the state representation used by the agent."""
@@ -44,6 +45,7 @@ class StateTracker:
         self.history = []
         self.round_num = 0
         self.current_request_slots = []
+        self.list_agent_request = []
 
     def print_history(self):
         """Helper function if you want to see the current history action by action."""
@@ -254,6 +256,9 @@ class StateTracker:
                 agent_action['inform_slots'][self.match_key] = 'no match available'
                 ################?????????
             self.current_informs[self.match_key] = agent_action['inform_slots'][self.match_key]
+        ## dùng để detect request lặp lại
+        elif agent_action['intent'] == 'request':
+            self.list_agent_request.append(agent_action)
         agent_action.update({'round': self.round_num, 'speaker': 'Agent'})
         
         self.history.append(agent_action)
