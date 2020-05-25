@@ -165,20 +165,24 @@ def post_api_cse_assistant():
     
     # ###########begin modify
     if agent_action['intent'] == "match_found":
+        print("--------------------------agent_action")
+        print(agent_action)
         if agent_action['inform_slots']['activity'] != "no match available":
             activity_key = agent_action['inform_slots']['activity']
-            first_result_data = agent_action['inform_slots'][activity_key][0]
-            if first_result_data["time"] != []:
-                first_result_data["time"] = [convert_from_unix_to_iso_format(x) for x in first_result_data["time"]]
-            if "time_works_place_address_mapping" in first_result_data and first_result_data["time_works_place_address_mapping"] is not None:
-                list_obj_map = first_result_data["time_works_place_address_mapping"]
-                list_result_obj_map = []
-                for obj_map in list_obj_map:
-                    if obj_map["time"] not in [None,[]]:
-                        obj_map["time"] = [convert_from_unix_to_iso_format(x) for x in obj_map["time"]]
-                    list_result_obj_map.append(obj_map)
-            first_result_data["time_works_place_address_mapping"] = list_obj_map
-            agent_action['inform_slots'][activity_key][0] = first_result_data
+            list_result_data = agent_action['inform_slots'][activity_key]
+            for i in range(len(list_result_data)):
+                result_data = list_result_data[i]
+                if result_data["time"] != []:
+                    result_data["time"] = [convert_from_unix_to_iso_format(x) for x in result_data["time"]]
+                if "time_works_place_address_mapping" in result_data and result_data["time_works_place_address_mapping"] is not None:
+                    list_obj_map = result_data["time_works_place_address_mapping"]
+                    list_result_obj_map = []
+                    for obj_map in list_obj_map:
+                        if obj_map["time"] not in [None,[]]:
+                            obj_map["time"] = [convert_from_unix_to_iso_format(x) for x in obj_map["time"]]
+                        list_result_obj_map.append(obj_map)
+                result_data["time_works_place_address_mapping"] = list_obj_map
+                agent_action['inform_slots'][activity_key][i] = result_data
 
     ################end modify
 

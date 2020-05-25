@@ -26,7 +26,7 @@ def sentence_to_index_vector(input_sentence):
   return vocab.numericalize(list_token)
 
 def convert_from_unix_to_iso_format(input_unix_timestamp):
-    return datetime.datetime.fromtimestamp(input_unix_timestamp).strftime('%Y-%m-%d %H:%M:%S')
+    return datetime.datetime.fromtimestamp(input_unix_timestamp).strftime('%d-%m-%Y %H:%M:%S')
 
 
 def check_match_sublist_and_substring(list_children,list_parent):

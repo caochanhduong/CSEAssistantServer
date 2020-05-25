@@ -155,7 +155,7 @@ import datetime
 print(
     datetime.datetime.fromtimestamp(
         int("1589382961")
-    ).strftime('%Y-%m-%d %H:%M:%S')
+    ).strftime('%d-%m-%Y %H:%M:%S')
 )
 
 

@@ -1,12 +1,12 @@
 from collections import defaultdict
 from .dialogue_config import no_query_keys, usersim_default_key
 import copy
- 
 from flask import Flask, request, jsonify
 from flask_pymongo import PyMongo
 from flask_cors import CORS
 import re
 from pymongo import MongoClient
+import datetime
 
 ###### tạm thời để đây vì import từ constants báo lỗi no module name constants
 list_map_key = ["works", "name_place", "address", "time"]
@@ -18,7 +18,9 @@ list_map_key = ["works", "name_place", "address", "time"]
 # mongo = PyMongo(app)
  
  
- 
+def convert_from_unix_to_iso_format(input_unix_timestamp):
+    return datetime.datetime.fromtimestamp(input_unix_timestamp).strftime('%d-%m-%Y %H:%M:%S')
+
  
 # client = MongoClient()
 # client = MongoClient('mongodb://caochanhduong:bikhungha1@ds261626.mlab.com:61626/activity?retryWrites=false')
@@ -112,9 +114,20 @@ class DBQuery:
         counter = 0
         if isinstance(value_search, list):
             for id in db_results_search.keys():
-                if counter > 5:
+                if counter == 5:
                     break
-                current_results.append(db_results_search[id])
+                result_data = db_results_search[id]
+                if result_data["time"] != []:
+                    result_data["time"] = [convert_from_unix_to_iso_format(x) for x in result_data["time"]]
+                if "time_works_place_address_mapping" in result_data and result_data["time_works_place_address_mapping"] is not None:
+                    list_obj_map = result_data["time_works_place_address_mapping"]
+                    list_result_obj_map = []
+                    for obj_map in list_obj_map:
+                        if obj_map["time"] not in [None,[]]:
+                            obj_map["time"] = [convert_from_unix_to_iso_format(x) for x in obj_map["time"]]
+                        list_result_obj_map.append(obj_map)
+                result_data["time_works_place_address_mapping"] = list_obj_map
+                current_results.append(result_data)
                 counter = counter + 1
 
         return filled_inform, current_results
