@@ -163,7 +163,7 @@ def post_api_cse_assistant():
         if agent_action['intent'] == "inform":
             current_results = StateTracker_Container[state_tracker_id][0].current_results
     
-    # ###########begin modify
+    # ###########chuyển đổi time trong các kết quả matchfound
     if agent_action['intent'] == "match_found":
         print("--------------------------agent_action")
         print(agent_action)
@@ -184,7 +184,19 @@ def post_api_cse_assistant():
                 result_data["time_works_place_address_mapping"] = list_obj_map
                 agent_action['inform_slots'][activity_key][i] = result_data
 
-    ################end modify
+
+    ################ chuyển đổi time trong current inform về dạng chuẩn ISO thời gian để hiển thị cho người dùng
+    if current_informs != "null":
+        print("-------------------------------current_informs")
+        print(current_informs)
+        if "time" in current_informs.keys():
+            if isinstance(current_informs["time"],list):
+                if len(current_informs["time"]) > 1: #==2
+                    current_informs["time"] = ["bắt đầu từ {0} và kết thúc lúc {1}".format(convert_from_unix_to_iso_format(current_informs["time"][0]),convert_from_unix_to_iso_format(current_informs["time"][1]))]
+                elif len(current_informs["time"]) == 1:
+                    current_informs["time"] = [convert_from_unix_to_iso_format(current_informs["time"][0])]
+    
+
 
     print("---------------------------current result")
     print(current_results)

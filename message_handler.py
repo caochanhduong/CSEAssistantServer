@@ -980,7 +980,7 @@ def process_message_to_user_request(message,state_tracker):
     # print(user_action)
     # Do chỉ có 1 phần tử  lúc parse từ NER nên lấy 0
     if "time" in user_action['inform_slots'].keys():
-        if user_action['inform_slots']["time"] != []:
+        if user_action['inform_slots']["time"] != [] and isinstance(user_action['inform_slots']["time"],list):
             if isinstance(user_action['inform_slots']["time"][0],str):
                 result = factory.processRawDatetimeInput(user_action['inform_slots']["time"][0])
                 if result != []:

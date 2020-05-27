@@ -165,6 +165,8 @@ def response_craft(agent_action, state_tracker, confirm_obj,isGreeting=False):
                 sentence_pattern = random.choice(INFORM[inform_slot + '_double'])
             elif len(agent_action['inform_slots'][inform_slot]) == 1:
                 sentence_pattern = random.choice(INFORM[inform_slot + '_single'])
+            else:
+                sentence_pattern = random.choice(EMPTY_SLOT)
 
         sentence = sentence_pattern.replace("*{}*".format(inform_slot), AGENT_INFORM_OBJECT[inform_slot])
 
