@@ -1,12 +1,8 @@
-tldextract==2.2.0
-prometheus-client==0.4.0
+
 https://download.pytorch.org/whl/cpu/torch-1.3.1%2Bcpu-cp36-cp36m-linux_x86_64.whl
 https://download.pytorch.org/whl/cpu/torchvision-0.4.2%2Bcpu-cp36-cp36m-linux_x86_64.whl
-gunicorn
 flask
 flask-cors
-mock
-coverage
 fastai
 numpy==1.15.2
 scikit-learn

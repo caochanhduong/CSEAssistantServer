@@ -223,7 +223,7 @@ separator_list = [
 
 ]
 class ActivityDateTime:
-	def __init__(self, day=1, month=1, year=int(datetime.today().year), hour=0, minute=0, second=0):
+	def __init__(self, day=1, month=int(datetime.today().month), year=int(datetime.today().year), hour=0, minute=0, second=0):
 		self.day = day
 		self.month = month
 		self.year = year

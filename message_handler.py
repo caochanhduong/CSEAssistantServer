@@ -903,9 +903,14 @@ def process_message_to_user_request(message,state_tracker):
             result_entity_dict, confirm_obj = find_all_entity(intent,processed_message)
             # print(result_entity_dict)
             # print(intent)
-            user_action['intent'] = 'request'
-            user_action['inform_slots'] = result_entity_dict
-            user_action['request_slots'] = {intent:'UNK'}
+            if "name_activity" not in result_entity_dict.keys() and intent != "name_activity":
+                user_action['intent'] = 'no_name'
+                user_action['inform_slots'] = {}
+                user_action['request_slots'] = {}
+            else:
+                user_action['intent'] = 'request'
+                user_action['inform_slots'] = result_entity_dict
+                user_action['request_slots'] = {intent:'UNK'}
         elif intent == 'not intent':
             #get agent request key for user to inform (not intent)
             # tránh những câu inform ngay từ ban đầu mà không biết intent

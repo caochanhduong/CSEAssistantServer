@@ -23,7 +23,7 @@ from agent_utils.state_tracker import StateTracker
 from keras import backend as K
 from pymongo import MongoClient
 import importlib
-
+from copy import deepcopy
 importlib.reload(message_handler)
 from message_handler import *
 
@@ -86,13 +86,13 @@ def process_conversation_POST(state_tracker_id, message):
     print("-----------------------------------user action")
     print(user_action)
     #nếu là câu request mới của user thì reset state tracker và cho confirm về lại None
-    if user_action['request_slots'] != {}:
+    if user_action['request_slots'] != {} or user_action['intent'] == "no_name":
         state_tracker.reset()
         confirm_obj = None
     #nếu có câu confirm request mới thì ghi đè
     if new_confirm_obj != None:
         confirm_obj = new_confirm_obj
-    if user_action['intent'] not in ["hello","other","done","dont_know"] :
+    if user_action['intent'] not in ["hello","other","done","dont_know","no_name"] :
         dqn_agent = DQNAgent(state_tracker.get_state_size(), constants)    
         agent_act = get_agent_response(state_tracker, dqn_agent, user_action)
         StateTracker_Container[state_tracker_id] = (state_tracker,confirm_obj)
@@ -158,10 +158,13 @@ def post_api_cse_assistant():
     current_informs = 'null'
     current_results = []
     agent_message , agent_action = process_conversation_POST(state_tracker_id, message)
+    print("StateTracker_Container[state_tracker_id][0].current_informs before assign")
+    print(state_tracker_id)
+    print(StateTracker_Container[state_tracker_id][0].current_informs)
     if agent_action['intent'] in ["match_found","inform"]:
-        current_informs = StateTracker_Container[state_tracker_id][0].current_informs
+        current_informs = deepcopy(StateTracker_Container[state_tracker_id][0].current_informs)
         if agent_action['intent'] == "inform":
-            current_results = StateTracker_Container[state_tracker_id][0].current_results
+            current_results = deepcopy(StateTracker_Container[state_tracker_id][0].current_results)
     
     # ###########chuyển đổi time trong các kết quả matchfound
     if agent_action['intent'] == "match_found":
@@ -195,7 +198,10 @@ def post_api_cse_assistant():
                     current_informs["time"] = ["bắt đầu từ {0} và kết thúc lúc {1}".format(convert_from_unix_to_iso_format(current_informs["time"][0]),convert_from_unix_to_iso_format(current_informs["time"][1]))]
                 elif len(current_informs["time"]) == 1:
                     current_informs["time"] = [convert_from_unix_to_iso_format(current_informs["time"][0])]
-    
+        # StateTracker_Container[state_tracker_id][0].current_informs = current_informs
+        print("StateTracker_Container[state_tracker_id][0].current_informs after assign")
+        print(state_tracker_id)
+        print(StateTracker_Container[state_tracker_id][0].current_informs)
 
 
     print("---------------------------current result")
@@ -231,6 +237,20 @@ def post_api_cse_assistant_reset_state_tracker():
         code = 404
     K.clear_session()
     return jsonify({"code": code, "message": message,"state_tracker_id":state_tracker_id})
+
+@app.route("/api/cse-assistant-conversation-manager/messages", methods=['POST'])
+def user_profile():
+    input_data = request.json
+    print(input_data)
+    if "message" not in input_data.keys():
+        return msg(400, "Message cannot be None")
+    state_tracker_id = input_data["state_tracker_id"]
+    message = input_data["message"]
+
+    mongo.db.messages.insert_one(
+        {"state_tracker_id": state_tracker_id, "message": message})
+        
+    return jsonify({"code": 200, "message": "insert successed!"})
 
 if __name__ == '__main__':
     app.run()

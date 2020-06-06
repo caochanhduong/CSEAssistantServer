@@ -14,27 +14,36 @@ DONE = [
 ]
 DONT_UNDERSTAND = [
     'Xin lỗi, mình không hiểu. Bạn nói cách khác dễ hiểu hơn được không?',
-    'Mình không hiểu ý bạn lắm'
+    'Mình không hiểu ý bạn lắm. Bạn nhập câu khác giúp mình nhen.',
+    'Chà! Bạn nói gì mình không hiểu lắm. Bạn nhập lại câu khác nhen.'
 ]
 
 NOT_FOUND = [
-    'Mình không tìm thấy hoạt động nào thỏa mãn các thông tin bạn đã cung cấp, vui lòng điều chỉnh lại giúp mình nhé!'
+    'Mình không tìm thấy hoạt động nào thỏa mãn các thông tin bạn đã cung cấp, vui lòng điều chỉnh lại giúp mình nhé!',
+    'Không có hoạt động nào thỏa mãn thông tin bạn đưa ra, bạn điều chỉnh lại giúp mình nhé!'
 ]
 EMPTY_SLOT = [
-    'Bài đăng về hoạt động thỏa mãn điều kiện của bạn nhưng nó không đề cập đến thông tin *request_slot*'
+    'Bài đăng về hoạt động thỏa mãn điều kiện của bạn nhưng nó không đề cập đến thông tin *request_slot*',
+    'Mình tìm được một số hoạt động thỏa yêu cầu của bạn nhưng lại không đề cập đến thông tin *request_slot*'
 ]
 def get_greeting_statement():
     return random.choice(GREETING)
 
 MATCH_FOUND = {
     'found': [
-        "Thông tin *found_slot* chung bạn cần: *found_slot_instance*, bên dưới là hoạt động cụ thể chứa thông tin đó và một số hoạt động khác cũng thỏa điều kiện bạn đưa ra"
+        "Thông tin *found_slot* bạn cần: *found_slot_instance*, bên dưới là hoạt động cụ thể chứa thông tin đó và một số hoạt động khác cũng thỏa điều kiện bạn đưa ra",
+        "Đây là thông tin *found_slot* bạn đang tìm: *found_slot_instance*, hoạt động cụ thể chứa thông tin đó và một số hoạt động khác cũng thỏa điều kiện bạn đưa ra được hiển thị ở bên dưới",
+        "Mình tìm được rồi đây!Thông tin *found_slot* bạn đang tìm nè: *found_slot_instance*, hoạt động cụ thể chứa thông tin đó và một số hoạt động khác cũng thỏa điều kiện bạn đưa ra được hiển thị ở bên dưới"
     ],
     'not_found': [
-        "Mình không tìm thấy bài đăng chứa thông tin *found_slot* mà bạn cần, bạn xem lại các thông tin đã cung cấp dưới đây và điều chỉnh lại giúp mình nhé!"
+        "Xin lỗi bạn! Mình không tìm thấy hoạt động nào chứa thông tin *found_slot* mà bạn cần, bạn xem lại các thông tin đã cung cấp dưới đây và điều chỉnh lại giúp mình nhé!",
+        "Xin lỗi nhé! Không có hoạt động nào chứa thông tin *found_slot* mà bạn cung cấp, bạn điều chỉnh lại giúp mình các thông tin đã cung cấp nhé!",
+        "Xin lỗi! Thông tin *found_slot* mà bạn cung cấp không nằm trong hoạt động nào, bạn điều chỉnh lại giúp mình các thông tin nhé!"
     ],
     'found_activity' :[
-        "Dưới đây là các hoạt động bạn cần tìm."
+        "Dưới đây là các hoạt động bạn cần tìm.",
+        "Đây là các hoạt động bạn đang tìm kiếm.",
+        "Mình đã tìm được các hoạt động bạn cần"
     ]
 }
 REQUEST = {}
@@ -107,19 +116,25 @@ INFORM['works'] = [
     'Tham gia hoạt động này thì thường sẽ làm các công việc như *works_instance*'
 ]
 INFORM['reward'] = [
-    'Tham gia hoạt động sẽ được *reward_instance*'
+    'Tham gia hoạt động sẽ được *reward_instance*',
+    'Lợi ích khi bạn tham gia hoạt động sẽ là: *reward_instance*'
 ]
 INFORM['contact'] = [
-    'bạn có thể liên hệ *contact_instance* nhé'
+    'bạn có thể liên hệ *contact_instance* nhé',
+    'thông tin liên hệ có thể là *contact_instance*'
 ]
 INFORM['register'] = [
-    'Để đăng ký bạn có thể làm như sau: *register_instance*'
+    'Để đăng ký bạn có thể làm như sau: *register_instance*',
+    'Thông tin để bạn đăng ký có thể là: *register_instance*'
+
 ]
 INFORM['joiner'] = [
-    '*joiner* là *joiner_instance* phải không?'
+    '*joiner* là *joiner_instance* phải không?',
+    '*joiner* có phải là *joiner_instance* không?'
 ]
 INFORM['activity'] = [
-    'Đây là hoạt động mình tìm được với yêu cầu hiện tại của bạn: *activity_instance*'
+    'Đây là hoạt động mình tìm được với yêu cầu hiện tại của bạn: *activity_instance*',
+    'Hiện tại mình tìm được một số hoạt động thỏa yêu cầu: *activity_instance*'
 ]
 
 AGENT_REQUEST_OBJECT = {
@@ -187,7 +202,7 @@ def response_craft(agent_action, state_tracker, confirm_obj,isGreeting=False):
             sentence = sentence.replace("*{}_instance*".format(inform_slot), "\"{}\"".format(inform_value))
         else:
             sentence_pattern = random.choice(EMPTY_SLOT)
-            sentence = sentence_pattern.replace("*request_slot*", inform_slot)
+            sentence = sentence_pattern.replace("*request_slot*", AGENT_INFORM_OBJECT[inform_slot])
         # print(sentence_pattern)
     elif agent_intent == "request":
         request_slot = list(agent_action['request_slots'].keys())[0]
@@ -264,9 +279,9 @@ def response_craft(agent_action, state_tracker, confirm_obj,isGreeting=False):
                         response_match = "\n \n Đúng rồi! {0} là sau thời gian {1}".format(AGENT_INFORM_OBJECT[inform_slot],value_match)
                 else:
                     if inform_slot != "time":
-                        response_match = "\n \n Sai rồi! {0} không là {1}".format(AGENT_INFORM_OBJECT[inform_slot],value_match)
+                        response_match = "\n \n Sai rồi! {0} không phải là {1}".format(AGENT_INFORM_OBJECT[inform_slot],value_match)
                     else:
-                        response_match = "\n \n Sai rồi! {0} không là sau thời gian {1}".format(AGENT_INFORM_OBJECT[inform_slot],value_match)
+                        response_match = "\n \n Sai rồi! {0} không phải là sau thời gian {1}".format(AGENT_INFORM_OBJECT[inform_slot],value_match)
 
 
             if inform_slot != "activity":

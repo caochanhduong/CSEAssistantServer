@@ -1,14 +1,13 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-from sklearn.externals import joblib
+import joblib
 import numpy as np
 from sklearn import preprocessing
 from sklearn.feature_extraction.text import TfidfVectorizer
 from fastai.text import *
 import torch
 import numpy as np
-from sklearn.externals import joblib
 from sklearn import preprocessing
 import os.path
 from collections import OrderedDict
@@ -204,6 +203,10 @@ response_to_user_free_style = {
     'dont_know':[
         "Sori bạn, mình không hiểu, bạn nhập lại câu khác nhé.",
         "Mình không hiếu ý bạn lắm nè, bạn nhập lại câu khác giúp mình nhe"
+    ],
+    'no_name':[
+        "Xin lỗi bạn, hiện tại bên mình không hỗ trợ hoạt động này hoặc bạn nhập thiếu tên hoạt động, bạn nhập lại hoạt động khác giúp mình nhen.",
+        "Xin lỗi, hình như câu bạn nhập không có tên hoạt động hoặc hoạt động không được hỗ trợ, mời bạn nhập lại hoạt động khác giúp mình nhen"
     ]
 }
 if __name__ == '__main__':

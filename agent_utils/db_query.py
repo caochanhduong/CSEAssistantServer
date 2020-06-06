@@ -198,7 +198,7 @@ class DBQuery:
         Returns:
             dict: The available items in the database
         """
-        print("-----------------------------get_db_results")
+        print("-----------------------------in get_db_results")
 
         # Filter non-queryable items and keys with the value 'anything' since those are inconsequential to the constraints
         new_constraints = {k: v for k, v in constraints.items() if k not in self.no_query and v != 'anything' and v != 'no match available'}
