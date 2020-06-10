@@ -186,7 +186,6 @@ def response_craft(agent_action, state_tracker, confirm_obj, isGreeting=False):
             sentence = sentence_pattern.replace("*found_slot*", AGENT_INFORM_OBJECT[inform_slot])
         else:
             key = agent_action['inform_slots']['activity']
-            #????????
             first_result_data = agent_action['inform_slots'][key][0]
 
             # #nếu là câu hỏi intent confirm thì cần response lại mà match hay không
@@ -199,13 +198,8 @@ def response_craft(agent_action, state_tracker, confirm_obj, isGreeting=False):
                     check_match = check_match_sublist_and_substring(confirm_obj[inform_slot],first_result_data[inform_slot])
                 else: #nếu là 4 key map
                     # TO DO: chỉnh lại 	
-                    # + problem: tìm cách dựa vào current inform để lấy ra value inform phù hợp trong trường hợp matchfound (không thể dùng first user action),
-                    # tuy nhiên lúc cập nhật nhiều object vào current inform thì giờ nó bị lộn xộn (chứa nhiều obj) nên chắc phải dùng first user action
-                    # MỚI : lúc lấy value inform chỉ cần dùng first user action để lọc ra từ first_result_data
-                    # lúc lấy các obj thỏa điều kiện có thể dùng first_result_data không ????? CHƯA ỔN !!!!!!!!!!!! LỠ ĐÂU GIỮA CHỪNG USER INFORM THÊM THÔNG TIN VÀO OBJ
-                    ############### CHƯA ỔN !!!!!!!!!!!! LỠ ĐÂU GIỮA CHỪNG USER INFORM THÊM THÔNG TIN VÀO OBJ
-
-                    ####NEW: nếu count <= 1 thì lấy thông tin chung bình thường , ngược lại tìm cách chọn ra từ curent inform những giá trị để lọc , tuy nhiên khó 
+                    # + tìm cách dựa vào current inform để lấy ra value inform phù hợp trong trường hợp matchfound 
+                    # nếu count <= 1 thì lấy thông tin chung bình thường , ngược lại tìm cách chọn ra từ curent inform những giá trị để lọc , tuy nhiên khó 
                     # khăn là nó vừa chứa giá trị inform từ agent (lẻ, trong hoặc ngoài) và giá trị inform từ user (cập nhật trong và ngoài)
 
                     #### lấy ra value inform

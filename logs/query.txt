@@ -93,13 +93,14 @@ trường hợp matchfound: state tracker lấy current inform ra để lúc mat
 
 
 
+#############################################READ FROM HERE
+Cấu trúc current_inform mới:
++ Đối với các key bình thường (ngoài 4 key đặc biệt): dạng list các value
++ Đối với các key đặc biệt: list của list, trong đó list đầu chứa thông tin chung, list sau là list của các list value của các object (cái nào không có giá trị thì là '')
+Ví dụ:
+time: [[v1,v2],[[v3,v4],[v5,v6]]]
+Thì [v1,v2] là giá trị thời gian chung, [v3,v4] là giá trị thời gian của object 1, [v5,v6] là giá trị thời gian của object 2
 NOTE:
-INFORM 
-	chỉnh count slot value đang count cho các key chung (chưa count cho các key con)
-	chỉnh fill inform slot đang fill theo key chung có count lớn nhất (chưa count cho key con)
-	dbquery đã chỉnh
-	count db result for slot k cần chỉnh (do đã count theo key inform)
-
 QUY ƯỚC: 
 + các key đặc biệt giá trị của key CHUNG và key RIÊNG không được có phần giao nhau (giữa các key riêng vẫn có thể giao nhau, các hoạt động con có trùng giờ)
 
@@ -116,15 +117,15 @@ Requirement:
 		+Key bình thường:
 			+ Làm như bth
 		+Key đặc biệt:
-			+ đồng ý: dựa vào object trả về HOẶC thông tin chung trả về  mà cập nhật vào điều kiện(cũ:nhận thông tin inform chung vào dkien và object vào dkien )
-			+ anything: (làm theo cái cũ vì chưa chắc kết quả đầu tiên match là thông tin user cần) nhận thông tin inform là "anything" và bỏ vào thông tin chung HOẶC riêng (trong object còn trống) (không bỏ vào cả 2 do đã xác định được user hỏi chung hay riêng dựa vào kết quả trả về ban đầu, hoạt động thỏa điều kiện ban đầu)(cũ: tìm object còn trống và bỏ vào, đồng thời bỏ vào thông tin chung nếu câu đầu tiên nhập vào ner có ít nhất 2 key đặc biệt hoặc 1 key đặc biệt nhưng intent cũng là key đặc biệt khác, còn không thì bỏ vào thông tin chung)
-			+ từ chối hoặc chỉ nhận 1 thông tin inform (câu nhập): (làm theo cái cũ vì chưa chắc kết quả đầu tiên match là thông tin user cần) nhận thông tin inform và bỏ vào thông tin chung HOẶC riêng (trong object còn trống) (không bỏ vào cả 2 do đã xác định được user hỏi chung hay riêng dựa vào kết quả trả về ban đầu, hoạt động thỏa điều kiện ban đầu) (cũ: tìm object còn trống và bỏ vào, đồng thời bỏ vào thông tin chung nếu câu đầu tiên nhập vào ner có ít nhất 2 key đặc biệt hoặc 1 key đặc biệt nhưng intent cũng là key đặc biệt khác, còn không thì bỏ vào thông tin chung)
+			+ đồng ý: dựa vào object trả về HOẶC thông tin chung trả về  mà cập nhật vào điều kiện
+			+ anything: tìm object còn trống và bỏ vào, đồng thời bỏ vào thông tin chung nếu câu đầu tiên nhập vào ner có ít nhất 2 key đặc biệt hoặc 1 key đặc biệt nhưng intent cũng là key đặc biệt khác, còn không thì bỏ vào thông tin chung
+			+ từ chối hoặc chỉ nhận 1 thông tin inform (câu nhập): tìm object còn trống và bỏ vào, đồng thời bỏ vào thông tin chung nếu câu đầu tiên nhập vào ner có ít nhất 2 key đặc biệt hoặc 1 key đặc biệt nhưng intent cũng là key đặc biệt khác, còn không thì bỏ vào thông tin chung
 	+ user response lại request:
 		+ Key bình thường:
 			+ Làm như bth
 		+ Key đặc biệt:
-			+ anything: (làm theo cái cũ vì chưa chắc kết quả đầu tiên match là thông tin user cần) nhận thông tin inform là "anything" và bỏ vào thông tin chung HOẶC riêng (trong object còn trống) (không bỏ vào cả 2 do đã xác định được user hỏi chung hay riêng dựa vào kết quả trả về ban đầu, hoạt động thỏa điều kiện ban đầu)(cũ: tìm object còn trống và bỏ vào, đồng thời bỏ vào thông tin chung nếu câu đầu tiên nhập vào ner có ít nhất 2 key đặc biệt hoặc 1 key đặc biệt nhưng intent cũng là key đặc biệt khác, còn không thì bỏ vào thông tin chung)
-			+ nhận 1 thông tin inform (câu nhập): (làm theo cái cũ vì chưa chắc kết quả đầu tiên match là thông tin user cần) nhận thông tin inform và bỏ vào thông tin chung HOẶC riêng (trong object còn trống) (không bỏ vào cả 2 do đã xác định được user hỏi chung hay riêng dựa vào kết quả trả về ban đầu, hoạt động thỏa điều kiện ban đầu)(cũ: tìm object còn trống và bỏ vào, đồng thời bỏ vào thông tin chung nếu câu đầu tiên nhập vào ner có ít nhất 2 key đặc biệt hoặc 1 key đặc biệt nhưng intent cũng là key đặc biệt khác, còn không thì bỏ vào thông tin chungP
+			+ anything: tìm object còn trống và bỏ vào, đồng thời bỏ vào thông tin chung nếu câu đầu tiên nhập vào ner có ít nhất 2 key đặc biệt hoặc 1 key đặc biệt nhưng intent cũng là key đặc biệt khác, còn không thì bỏ vào thông tin chung
+			+ nhận 1 thông tin inform (câu nhập): tìm object còn trống và bỏ vào, đồng thời bỏ vào thông tin chung nếu câu đầu tiên nhập vào ner có ít nhất 2 key đặc biệt hoặc 1 key đặc biệt nhưng intent cũng là key đặc biệt khác, còn không thì bỏ vào thông tin chung
 	+ Agent trả kết quả:
 		+ Matchfound: 
 			+ Key bình thường: trả key bình thường và các object thỏa điều kiện + bài đăng
@@ -164,9 +165,4 @@ implement idea:
 	phải viết 1 module sử dụng current_inform để tìm ra value cần inform cho user, lúc confirm thì so value này với confirm_obj và kết luận
 	+ problem: update_state_agent đã append vào điều kiện rồi nhưng update_state_user lại append thêm phát nữa, tìm cách check đã tồn tại value trong điều kiện 
 	rồi để khỏi append
-
 	+ problem: tìm cách dựa vào current inform để lấy ra value inform phù hợp trong trường hợp matchfound (không thể dùng first user action)
-
-
-STATUS:
-+ đang implement update_state_user, thiếu trường hợp cập nhật key riêng lẻ vào current inform 
