@@ -165,7 +165,7 @@ class DBQuery:
 
  
     def get_db_results(self, constraints):
-        # + get_db_results KHÔNG cần sửa vì nó chỉ có chức năng lấy kết quả từ convertregextoconstraint
+        # TO DO
         """
         Get all items in the database that fit the current constraints.
  
