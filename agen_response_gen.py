@@ -169,6 +169,7 @@ def response_craft(agent_action, state_tracker, confirm_obj,isGreeting=False):
         return random.choice(GREETING)
     agent_intent = agent_action['intent']
     if agent_intent == "inform":
+        # TO DO : trường hợp agent inform, bổ sung thêm response thêm các object thỏa điều kiện (chỉ cần lấy ra từ trong agent action)
         inform_slot = list(agent_action['inform_slots'].keys())[0]
         if agent_action['inform_slots'][inform_slot] == 'no match available':
             return random.choice(NOT_FOUND)
@@ -222,14 +223,21 @@ def response_craft(agent_action, state_tracker, confirm_obj,isGreeting=False):
     elif agent_intent == "done":
         return random.choice(DONE)
     elif agent_intent == "match_found":
+         # TO DO :trường hợp agent matchfound, lúc lấy ra kết quả đầu tiên thỏa thì get lại current_inform từ state tracker để tìm các list match obj 
+	# thỏa điều kiện, đồng thời response lại câu cho user luôn (không giống với inform chỉ cần lấy ra và response câu), inform value mà phải trả về 
+    # cho user bây giờ phải viết 1 module sử dụng current_inform để tìm ra value cần inform cho user, lúc confirm thì so value này với confirm_obj và kết luận
         assert len(state_tracker.current_request_slots) > 0
         inform_slot = state_tracker.current_request_slots[0]
         if agent_action['inform_slots']['activity'] == "no match available":
             sentence_pattern = random.choice(MATCH_FOUND['not_found'])
             sentence = sentence_pattern.replace("*found_slot*", AGENT_INFORM_OBJECT[inform_slot])
         else:
+            # TO DO: chỉnh lại 	
+            # tìm cách dựa vào current inform để lấy ra value inform phù hợp trong trường hợp matchfound 
+            # nếu count <= 1 thì lấy thông tin chung bình thường , ngược lại tìm cách chọn ra từ curent inform những giá trị để lọc , tuy nhiên khó 
+            # khăn là nó vừa chứa giá trị inform từ agent (lẻ, trong hoặc ngoài) và giá trị inform từ user (cập nhật trong và ngoài)
+
             key = agent_action['inform_slots']['activity']
-            #????????
             first_result_data = agent_action['inform_slots'][key][0]
 
             # #nếu là câu hỏi intent confirm thì cần response lại mà match hay không
@@ -237,7 +245,7 @@ def response_craft(agent_action, state_tracker, confirm_obj,isGreeting=False):
             print("---------------------------------confirm obj: {}".format(confirm_obj))
             response_match = ''
 
-            ##TO DO : chỉnh lại confirm lúc so sánh time (ok)
+          
             if confirm_obj != None:
                 if inform_slot not in list_map_key:
                     check_match = check_match_sublist_and_substring(confirm_obj[inform_slot],first_result_data[inform_slot])
@@ -308,7 +316,7 @@ def response_craft(agent_action, state_tracker, confirm_obj,isGreeting=False):
             list_obj_map_match = []
             response_obj = ''
 
-            ## TO DO :chỉnh lại lúc lấy object từ điều kiện 
+            
             if "time_works_place_address_mapping" in first_result_data and first_result_data["time_works_place_address_mapping"] not in [None,[]] and inform_slot in list_map_key:
                 current_informs = state_tracker.current_informs
                 print("--------------------------current informs : {0}".format(current_informs))

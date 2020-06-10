@@ -45,6 +45,8 @@ class DBQuery:
         self.match_key = usersim_default_key
  
     def fill_inform_slot(self, inform_slot_to_fill, current_inform_slots):
+        #TO TO :lấy kết quả VALUE có count max từ _count_slot_values, sau đó search lại trong db_results lấy giá trị đầu
+	    # tiên có value giống với VALUE có count max (1 module) và trả về các object thỏa current inform (1 module) cũng như value max đó về
         """
         Given the current informs/constraints fill the informs that need to be filled with values from the database.
  
@@ -133,6 +135,11 @@ class DBQuery:
         return filled_inform, current_results
  
     def _count_slot_values(self, key, db_subdict):
+        # TO DO: _count_slot_values: đối với các key bình thường thì đếm các value của từng key bình thường, còn đối với các 
+    # key đặc biệt thì viết 1 module lấy current_inform ra, từ đó lấy ra được giá trị mà đi chung với điều kiện các key 
+    # đặc biệt trong current inform rồi mới đếm (ví dụ dùng key works, name_place trong current_inform để xác định value 
+    # của key time đi chung với works, name_place trong current_inform, sau đó đếm sự xuất hiện của từng value trong 
+    # db_subdict) 
         """
         Return a dict of the different values and occurrences of each, given a key, from a sub-dict of database
  
@@ -186,6 +193,7 @@ class DBQuery:
 
  
     def get_db_results(self, constraints):
+        # TO DO
         """
         Get all items in the database that fit the current constraints.
  
@@ -257,6 +265,10 @@ class DBQuery:
  
         return available_options
     def get_db_results_for_slots(self, current_informs):
+         #  TO DO:   + get_db_results_for_slots: viết 1 module để với mỗi key thì chỉ current inform còn các giá trị của chỉ key đó 
+	# (ví dụ current inform có time, works ở ngoài và trong thì khi xét time chỉ xét time ở ngoài và trong, bỏ hết các giá trị 
+	# của key works), còn với các key 
+	# bình thường thì làm như bình thường (key:value)
         """
         Counts occurrences of each current inform slot (key and value) in the database items.
  
@@ -333,6 +345,11 @@ class DBQuery:
     #     return regex_constraint_dict
 
     def convert_to_regex_constraint(self, constraints):
+        # TO DO :
+        # + Chỗ convertregextoconstraint không cần phân biệt câu đầu tiên hay câu quá trình hội thoại, 
+        # chỉ cần viết thêm 1 module lọc ra các key nào nằm ở cả key chung và trong object và đem các key đó 
+        # đi query CÙNG NHAU ở ngoài và trong, 
+	    # còn lại query theo ở ngoài
         print("-----------------------------convert_to_regex_constraint")
 
         list_and_out = []
