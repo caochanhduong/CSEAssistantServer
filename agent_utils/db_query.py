@@ -105,7 +105,7 @@ class DBQuery:
         else:
             filled_inform[key] = 'no match available'
 
-        return filled_inform
+        return filled_inform, list_match_obj
  
     def _count_slot_values(self, key, db_subdict):
     # TO DO: _count_slot_values: đối với các key bình thường thì đếm các value của từng key bình thường, còn đối với các 
@@ -165,7 +165,7 @@ class DBQuery:
 
  
     def get_db_results(self, constraints):
-        # TO DO
+        # TO DO: viết 1 module lọc no match available và anything
         """
         Get all items in the database that fit the current constraints.
  
@@ -180,12 +180,13 @@ class DBQuery:
         """
  
         # Filter non-queryable items and keys with the value 'anything' since those are inconsequential to the constraints
+        
         new_constraints = {k: v for k, v in constraints.items() if k not in self.no_query and v != 'anything' and v != 'no match available'}
         # print("-----------------------------------DIEU KIEN")
         # print(new_constraints)
         tuple_new_constraint=copy.deepcopy(new_constraints)
         # print(tuple_new_constraint)
-        inform_items ={k:tuple(v) for k,v in tuple_new_constraint.items()}.items()
+        inform_items = {k:tuple(v) for k,v in tuple_new_constraint.items()}.items()
         inform_items = frozenset(inform_items)
  
         # inform_items = frozenset(new_constraints.items())
@@ -236,10 +237,9 @@ class DBQuery:
  
         return available_options
     def get_db_results_for_slots(self, current_informs):
-    #  TO DO:   + get_db_results_for_slots: viết 1 module để với mỗi key thì chỉ current inform còn các giá trị của chỉ key đó 
-	# (ví dụ current inform có time, works ở ngoài và trong thì khi xét time chỉ xét time ở ngoài và trong, bỏ hết các giá trị 
-	# của key works), còn với các key 
-	# bình thường thì làm như bình thường (key:value)
+    #  TO DO:   + get_db_results_for_slots: viết 1 module để lọc điều kiện các key đặc biệt (các value nào vừa nằm ở ngoài và trong thì để riêng,
+    # trong object để riêng), còn với các key bình thường thì làm như bình thường (key:value)
+    # Viết 1 module  
         """
         Counts occurrences of each current inform slot (key and value) in the database items.
  
@@ -317,9 +317,8 @@ class DBQuery:
     def convert_to_regex_constraint(self, constraints):
         # TO DO :
         # + Chỗ convertregextoconstraint không cần phân biệt câu đầu tiên hay câu quá trình hội thoại, 
-        # chỉ cần viết thêm 1 module lọc ra các key nào nằm ở cả key chung và trong object và đem các key đó 
-        # đi query CÙNG NHAU ở ngoài và trong, 
-	    # còn lại query theo ở ngoài
+        # chỉ cần viết thêm 1 module lọc ra các value nào nằm ở cả key chung và trong object và đem các key đó 
+        # đi query CÙNG NHAU ở ngoài và trong, còn lại query theo ở ngoài hoặc trong tùy vào nó nằm ở object hay thông tin chung
         list_and_out = []
         list_and_in = []
         ele_match_obj = {}

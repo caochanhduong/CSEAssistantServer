@@ -200,7 +200,7 @@ def response_craft(agent_action, state_tracker, confirm_obj, isGreeting=False):
                     # TO DO: chỉnh lại 	
                     # + tìm cách dựa vào current inform để lấy ra value inform phù hợp trong trường hợp matchfound 
                     # nếu count <= 1 thì lấy thông tin chung bình thường , ngược lại tìm cách chọn ra từ curent inform những giá trị để lọc , tuy nhiên khó 
-                    # khăn là nó vừa chứa giá trị inform từ agent (lẻ, trong hoặc ngoài) và giá trị inform từ user (cập nhật trong và ngoài)
+                    # khăn là nó vừa chứa giá trị inform từ agent (lẻ, trong hoặc ngoài) và giá trị inform từ user (cập nhật trong và ngoài), 
 
                     #### lấy ra value inform
                     first_user_action = state_tracker.first_user_action

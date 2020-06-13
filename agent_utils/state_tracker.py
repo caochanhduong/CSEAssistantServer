@@ -86,7 +86,7 @@ class StateTracker:
         for key in user_action['inform_slots'].keys():
             list_match_obj = user_action['list_match_obj']
             user_inform_slots_rep[self.slots_dict[key]] = 1.0
-            if list_match_obj != None:
+            if list_match_obj not in [None,[]]:
                 for special_key in special_keys:
                     user_inform_slots_rep[self.slots_dict[special_key]] = 1.0
 
@@ -105,7 +105,7 @@ class StateTracker:
         # TO DO : chỉ cập nhật các key trong current inform mà giá trị của nó khác rỗng (tức là không chỉ toàn chứa '', nếu là list rỗng thì vẫn tính là có giá trị)
         for key in self.current_informs:
             if key in special_keys:
-                if self.current_informs[0] != '' or self.current_informs[1][0] != '':
+                if self.current_informs[key][0] != '' or self.current_informs[key][1][0] != '':
                     current_slots_rep[self.slots_dict[key]] = 1.0     
             else:
                 current_slots_rep[self.slots_dict[key]] = 1.0
@@ -127,7 +127,7 @@ class StateTracker:
             for key in last_agent_action['inform_slots'].keys():
                 if key in agent_inform_slots:
                     agent_inform_slots_rep[self.slots_dict[key]] = 1.0
-            if list_match_obj != None:
+            if list_match_obj not in [None,[]]:
                 for special_key in special_keys:
                     agent_inform_slots_rep[self.slots_dict[special_key]] = 1.0
         # Encode last agent request slots
@@ -320,8 +320,12 @@ class StateTracker:
 
     def checkExistValue(self, key, value):
         if key in self.current_informs.keys():
-            if value == self.current_informs[key][0] or value in self.current_informs[key][1]:
-                return True
+            if key in special_keys:
+                if value == self.current_informs[key][0] or value in self.current_informs[key][1]:
+                    return True
+            else:
+                if value == self.current_informs[key]:
+                    return True
         return False
     
     def deleteInform(self, inform_obj): #-> replace with ''
@@ -364,20 +368,23 @@ class StateTracker:
         inform_slots =  inform_obj['inform_slots']
         list_match_obj = inform_obj['list_match_obj']
         match_all = True
+        # kiểm tra trong inform_slots
         for key in inform_slots.keys():
             if inform_slots[key] != '':
                 if not self.checkExistValue(key, inform_slots[key]):
                     match_all = False
                     break
+        # kiểm tra trong list_match_obj
         if match_all == True:
             if list_match_obj not in [None, []] :
                 for key in special_keys: #nếu current inform không đủ key đặc biệt (nhưng lại có list_match_obj)
                     if key not in self.current_informs.keys():
                         match_all = False
                         break
-                if match_all == True: #nếu đủ key đặc biệt thì loop qua
+                if match_all == True: #nếu đủ key đặc biệt thì loop qua kiểm tra các object trong list_match_obj có nằm trong current_infomrs không
                     for match_obj in list_match_obj:
                         match_all_key_in_obj = False
+                        #số object hiện có trong current_informs
                         for i in range(len(self.current_informs['works'][1])): 
                             count_match = 0
                             for key in special_keys:
@@ -497,7 +504,7 @@ class StateTracker:
                                         count_special = count_special + 1
                                 
                                 if key not in self.current_informs:
-                                    self.current_informs[key] = [value, ['']]
+                                    self.current_informs[key] = [value, []]
                                 else:
                                     self.current_informs[key][0] = value 
                                                     
