@@ -951,25 +951,25 @@ import json
 
 
 
-factory.test_addUpperBoundary(
-	[
-		{"rawDatetime": "thời gian dự thi: vào lúc 9g30 ngày 24/12/2019", "expectedOutput": "lower_bound: 24/12/2019 9:30:0, upper_bound: 24/12/2019 23:59:59"}
-		,{"rawDatetime": "thời gian dự thi: vào lúc 9g ngày 24/12/2019", "expectedOutput": "lower_bound: 24/12/2019 9:0:0, upper_bound: 24/12/2019 23:59:59"}
-		,{"rawDatetime": "thời gian dự thi: vào lúc 0g ngày 24/12/2019", "expectedOutput": "lower_bound: 24/12/2019 0:0:0, upper_bound: 24/12/2019 23:59:59"}
-		,{"rawDatetime": "thời gian dự thi: ngày 24/12/2019", "expectedOutput": "lower_bound: 24/12/2019 0:0:0, upper_bound: 24/12/2019 23:59:59"}
-		,{"rawDatetime": "thời gian dự thi: 12/2019", "expectedOutput": "lower_bound: 1/12/2019 0:0:0, upper_bound: 31/12/2019 23:59:59"}
-		,{"rawDatetime": "thời gian dự thi: năm 2019", "expectedOutput": "lower_bound: 1/6/2019 0:0:0, upper_bound: 31/12/2019 23:59:59"}
-		,{"rawDatetime": "thời gian dự thi: vào ngày mai", "expectedOutput": "lower_bound: 14/6/2020 0:0:0, upper_bound: 14/6/2020 23:59:59"}
-		,{"rawDatetime": "thời gian dự thi: 2 ngày nữa", "expectedOutput": "lower_bound: 15/6/2020 0:0:0, upper_bound: 15/6/2020 23:59:59"}
-		,{"rawDatetime": "thời gian dự thi: 1 ngày trước", "expectedOutput": "lower_bound: 12/6/2020 0:0:0, upper_bound: 12/6/2020 23:59:59"}
-		,{"rawDatetime": "thời gian dự thi: hôm qua", "expectedOutput": "lower_bound: 12/6/2020 0:0:0, upper_bound: 12/6/2020 23:59:59"}
+# factory.test_addUpperBoundary(
+# 	[
+# 		{"rawDatetime": "thời gian dự thi: vào lúc 9g30 ngày 24/12/2019", "expectedOutput": "lower_bound: 24/12/2019 9:30:0, upper_bound: 24/12/2019 23:59:59"}
+# 		,{"rawDatetime": "thời gian dự thi: vào lúc 9g ngày 24/12/2019", "expectedOutput": "lower_bound: 24/12/2019 9:0:0, upper_bound: 24/12/2019 23:59:59"}
+# 		,{"rawDatetime": "thời gian dự thi: vào lúc 0g ngày 24/12/2019", "expectedOutput": "lower_bound: 24/12/2019 0:0:0, upper_bound: 24/12/2019 23:59:59"}
+# 		,{"rawDatetime": "thời gian dự thi: ngày 24/12/2019", "expectedOutput": "lower_bound: 24/12/2019 0:0:0, upper_bound: 24/12/2019 23:59:59"}
+# 		,{"rawDatetime": "thời gian dự thi: 12/2019", "expectedOutput": "lower_bound: 1/12/2019 0:0:0, upper_bound: 31/12/2019 23:59:59"}
+# 		,{"rawDatetime": "thời gian dự thi: năm 2019", "expectedOutput": "lower_bound: 1/6/2019 0:0:0, upper_bound: 31/12/2019 23:59:59"}
+# 		,{"rawDatetime": "thời gian dự thi: vào ngày mai", "expectedOutput": "lower_bound: 14/6/2020 0:0:0, upper_bound: 14/6/2020 23:59:59"}
+# 		,{"rawDatetime": "thời gian dự thi: 2 ngày nữa", "expectedOutput": "lower_bound: 15/6/2020 0:0:0, upper_bound: 15/6/2020 23:59:59"}
+# 		,{"rawDatetime": "thời gian dự thi: 1 ngày trước", "expectedOutput": "lower_bound: 12/6/2020 0:0:0, upper_bound: 12/6/2020 23:59:59"}
+# 		,{"rawDatetime": "thời gian dự thi: hôm qua", "expectedOutput": "lower_bound: 12/6/2020 0:0:0, upper_bound: 12/6/2020 23:59:59"}
 
-		,{"rawDatetime": "thời gian dự thi: đầu tuần sau", "expectedOutput": "lower_bound: 15/6/2020 0:0:0, upper_bound: 16/6/2020 23:59:59"}
-		,{"rawDatetime": "thời gian dự thi: cuối tuần sau", "expectedOutput": "lower_bound: 20/6/2020 0:0:0, upper_bound: 21/6/2020 23:59:59"}
-		,{"rawDatetime": "thời gian dự thi: thứ 2 tuần sau", "expectedOutput": "lower_bound: 15/6/2020 0:0:0, upper_bound: 15/6/2020 23:59:59"}
-		,{"rawDatetime": "thời gian dự thi: cuối tháng tới", "expectedOutput": "lower_bound: 21/7/2020 0:0:0, upper_bound: 31/7/2020 23:59:59"}
-		,{"rawDatetime": "thời gian dự thi: cuối năm nay", "expectedOutput": "lower_bound: 1/9/2020 0:0:0, upper_bound: 31/12/2020 23:59:59"}
+# 		,{"rawDatetime": "thời gian dự thi: đầu tuần sau", "expectedOutput": "lower_bound: 15/6/2020 0:0:0, upper_bound: 16/6/2020 23:59:59"}
+# 		,{"rawDatetime": "thời gian dự thi: cuối tuần sau", "expectedOutput": "lower_bound: 20/6/2020 0:0:0, upper_bound: 21/6/2020 23:59:59"}
+# 		,{"rawDatetime": "thời gian dự thi: thứ 2 tuần sau", "expectedOutput": "lower_bound: 15/6/2020 0:0:0, upper_bound: 15/6/2020 23:59:59"}
+# 		,{"rawDatetime": "thời gian dự thi: cuối tháng tới", "expectedOutput": "lower_bound: 21/7/2020 0:0:0, upper_bound: 31/7/2020 23:59:59"}
+# 		,{"rawDatetime": "thời gian dự thi: cuối năm nay", "expectedOutput": "lower_bound: 1/9/2020 0:0:0, upper_bound: 31/12/2020 23:59:59"}
 
 
-	]
-)
+# 	]
+# )
