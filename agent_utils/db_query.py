@@ -278,6 +278,7 @@ class DBQuery:
             if CI_key in self.no_query:
                 continue
             # If anything all_slots_match stays true AND the specific key slot gets a +1
+            # nếu là key bình thường thì có thể count như vậy
             if CI_value == 'anything':
                 db_results[CI_key] = self.db.activities.count()
                 del temp_current_informs[CI_key]
