@@ -238,6 +238,8 @@ class ActivityDateTime:
 			"minute": {"priority": 0, "values": []},
 			"second": {"priority": 0, "values": []}
 		}
+		self.advanceKey = []
+		self.upperBound = None
 	def __getitem__(self, key):
 		return self.__getattribute__(key)
 	def __setitem__(self, key, value):
@@ -368,15 +370,67 @@ class ActivityDateTimeToUnixFactory:
 			# activityDateTime = self.processSingleDatetimeInput(rawDatetime)
 		elif len(rawValueSplitted) == 1:
 			slot1 = self.processSingleDatetimeInput(rawValueSplitted[0], 2)
-			# print(slot1.extractAllValue())
-			return [slot1]
+			#### Handle add 1 more upper boundary constraint
+			slot1_upper_boundary = self.addUpperBoundary(slot1)
+			return [slot1_upper_boundary]
 			
 			# unixFormat = self.convertToUnixFormat(activityDateTime)
 			# return unixFormat
 		else:
 			print("ERROR: cannot extract any value")
 			return []
+	def addUpperBoundary(self, activityDateTime):
+		if len(activityDateTime.advanceKey) == 0: 
+			if activityDateTime.others["day"]["priority"] != 0 or activityDateTime.others["hour"]["priority"] != 0:
+				activityDateTime.upperBound = ActivityDateTime(day=activityDateTime
+					.day, month=activityDateTime.month, year=activityDateTime.year, hour=23, minute=59, second=59)
+			elif activityDateTime.others["month"]["priority"] != 0:
+				activityDateTime.upperBound = ActivityDateTime(day=monthrange(int(datetime.today().year),int(activityDateTime.month))[1], month=activityDateTime.month, year=activityDateTime.year, hour=23, minute=59, second=59)
+			elif activityDateTime.others["year"]["priority"] != 0:
+				activityDateTime.upperBound = ActivityDateTime(day=31, month=12, year=activityDateTime.year, hour=23, minute=59, second=59)
+		else: #contains advance pattern
+			
+			if "day" in "".join(activityDateTime.advanceKey):
+				activityDateTime.upperBound = ActivityDateTime(day=activityDateTime.day, month=activityDateTime.month, year=activityDateTime.year, hour=23, minute=59, second=59)
 
+			elif "week" in activityDateTime.advanceKey:
+				activityDateTime.upperBound.validAndSetHour(23, priority=1)
+				activityDateTime.upperBound.validAndSetMinute(59, priority=1)
+				activityDateTime.upperBound.validAndSetSecond(59, priority=1)
+
+			elif "month" in activityDateTime.advanceKey:
+				activityDateTime.upperBound.validAndSetHour(23, priority=1)
+				activityDateTime.upperBound.validAndSetMinute(59, priority=1)
+				activityDateTime.upperBound.validAndSetSecond(59, priority=1)
+
+			elif "year" in activityDateTime.advanceKey:
+				activityDateTime.upperBound.validAndSetDay(31, priority=1)
+				activityDateTime.upperBound.validAndSetHour(23, priority=1)
+				activityDateTime.upperBound.validAndSetMinute(59, priority=1)
+				activityDateTime.upperBound.validAndSetSecond(59, priority=1)
+		return activityDateTime
+	def test_addUpperBoundary(self, inputDict):
+		# slot1 = self.processSingleDatetimeInput(rawDatetime, 2)
+		# #### Handle add 1 more upper boundary constraint
+		# slot1_upper_boundary = self.addUpperBoundary(slot1)
+		# print("lower_bound: {0}, upper_bound: {1}".format(slot1_upper_boundary.extractAllValue(), slot1_upper_boundary.upperBound.extractAllValue() if slot1_upper_boundary.upperBound != None else "upper None!"))
+		passnum = 0
+		failnum = 0
+		for index, value in enumerate(inputDict):
+			datetimeObject = self.processSingleDatetimeInput(inputDict[index]["rawDatetime"], 2)
+			datetimeObjectUpperBoundary = self.addUpperBoundary(datetimeObject)
+			output = "lower_bound: {0}, upper_bound: {1}".format(datetimeObjectUpperBoundary.extractAllValue(), datetimeObjectUpperBoundary.upperBound.extractAllValue() if datetimeObjectUpperBoundary.upperBound != None else "upper None!")
+			if output == inputDict[index]["expectedOutput"]:
+				passnum += 1
+				print("test case {0}: PASS".format(index))
+				print("utc: {}".format(datetimeObject.convertToUnix()))
+
+			else:
+				failnum += 1
+				print("test case {0}: FAIL".format(index))
+				print("rawDatetime: {0}\n expectedOutput: {1}\n currentOutput: {2}".format(inputDict[index]["rawDatetime"],
+					inputDict[index]["expectedOutput"], output))
+		print("PASSED: {0}/{1}".format(passnum, passnum + failnum))
 	def splitRawValues(self, rawDatetime):
 		global list_pattern_time_new
 		date_time_pattern_joined = "(({0}).*)+".format("|".join([pattern for key in date_time_pattern for pattern in date_time_pattern[key]] + [pattern for key in advance_time for pattern in advance_time[key]]))
@@ -522,7 +576,9 @@ class ActivityDateTimeToUnixFactory:
 			for advancePattern in advancePatternList:
 				advance_result = re.findall(advancePattern, rawDatetime, re.IGNORECASE)
 				if advance_result:
+
 					keyNameList = key.split("_")
+					activityDateTime.advanceKey = keyNameList
 
 					# if "month" exists in keyNameList:
 					if "month" in keyNameList:
@@ -540,10 +596,22 @@ class ActivityDateTimeToUnixFactory:
 						elif "number" in keyNameList and advance_result[0] in month_mapping.keys():
 							activityDateTime.validAndSetMonth(month_mapping[advance_result[0]], priority=1)	
 						
-						if keyNameList[0] == "end":
-							activityDateTime.validAndSetDay(advance_time_range["month"][keyNameList[0]][str(activityDateTime.month)][boundIdx], priority=1)	
+						if boundIdx != 2:
+							if keyNameList[0] == "end":
+								activityDateTime.validAndSetDay(advance_time_range["month"][keyNameList[0]][str(activityDateTime.month)][boundIdx], priority=1)	
+							else:
+								activityDateTime.validAndSetDay(advance_time_range["month"][keyNameList[0]][boundIdx], priority=1)
 						else:
-							activityDateTime.validAndSetDay(advance_time_range["month"][keyNameList[0]][boundIdx], priority=1)
+							if keyNameList[0] == "end":
+								activityDateTime.validAndSetDay(advance_time_range["month"][keyNameList[0]][str(activityDateTime.month)][1], priority=1)	
+								activityDateTime.upperBound = ActivityDateTime()
+								activityDateTime.upperBound.validAndSetDay(advance_time_range["month"][keyNameList[0]][str(activityDateTime.month)][0], priority=1)
+								activityDateTime.upperBound.validAndSetMonth(activityDateTime.month, priority=1)
+							else:
+								activityDateTime.validAndSetDay(advance_time_range["month"][keyNameList[0]][1], priority=1)
+								activityDateTime.upperBound = ActivityDateTime()
+								activityDateTime.upperBound.validAndSetDay(advance_time_range["month"][keyNameList[0]][0], priority=1)
+								activityDateTime.upperBound.validAndSetMonth(activityDateTime.month, priority=1)
 					elif "year" in keyNameList:
 						if "next" in keyNameList:
 							activityDateTime.validAndSetYear(currentYear + 1, priority=1)
@@ -552,8 +620,13 @@ class ActivityDateTimeToUnixFactory:
 						elif "number" in keyNameList:
 							activityDateTime.validAndSetYear(advance_result[0], priority=1)
 
-
-						activityDateTime.validAndSetMonth(advance_time_range["year"][keyNameList[0]][boundIdx], priority=1)
+						if boundIdx != 2:
+							activityDateTime.validAndSetMonth(advance_time_range["year"][keyNameList[0]][boundIdx], priority=1)
+						else:
+							activityDateTime.validAndSetMonth(advance_time_range["year"][keyNameList[0]][1], priority=1)
+							activityDateTime.upperBound = ActivityDateTime()
+							activityDateTime.upperBound.validAndSetMonth(advance_time_range["year"][keyNameList[0]][0], priority=1)
+							activityDateTime.upperBound.validAndSetYear(activityDateTime.year, priority=1)
 
 					elif "week" in keyNameList:
 						week = int(datetime.today().isocalendar()[1]) - 1
@@ -563,12 +636,35 @@ class ActivityDateTimeToUnixFactory:
 							week -= 1
 
 						dayOfWeek = 1
-						newDate = datetime.strptime("{0}-W{1}-{2}".format(currentYear, week, dayOfWeek + advance_time_range["week"][keyNameList[0]][boundIdx]),"%Y-W%W-%w")
-						activityDateTime.validAndSetDay(newDate.day, priority=1)
-						if int(newDate.month) != currentMonth:
-							activityDateTime.validAndSetMonth(newDate.month, priority=1)
-						if int(newDate.year) != currentYear:
-							activityDateTime.validAndSetYear(newDate.year, priority=1)
+						if boundIdx != 2:
+							newDate = datetime.strptime("{0}-W{1}-{2}".format(currentYear, week, dayOfWeek + advance_time_range["week"][keyNameList[0]][boundIdx]),"%Y-W%W-%w")
+						
+							activityDateTime.validAndSetDay(newDate.day, priority=1)
+						
+
+							if int(newDate.month) != currentMonth:
+								activityDateTime.validAndSetMonth(newDate.month, priority=1)
+							if int(newDate.year) != currentYear:
+								activityDateTime.validAndSetYear(newDate.year, priority=1)
+						else:
+							newDate = datetime.strptime("{0}-W{1}-{2}".format(currentYear, week, dayOfWeek + advance_time_range["week"][keyNameList[0]][1]),"%Y-W%W-%w")
+						
+							activityDateTime.validAndSetDay(newDate.day, priority=1)
+						
+
+							if int(newDate.month) != currentMonth:
+								activityDateTime.validAndSetMonth(newDate.month, priority=1)
+							if int(newDate.year) != currentYear:
+								activityDateTime.validAndSetYear(newDate.year, priority=1)
+
+							newDateUpper = datetime.strptime("{0}-W{1}-{2}".format(currentYear, week, dayOfWeek + advance_time_range["week"][keyNameList[0]][0]), "%Y-W%W-%w")
+							activityDateTime.upperBound = ActivityDateTime()
+							
+							activityDateTime.upperBound.validAndSetDay(newDateUpper.day, priority=1)
+							if int(newDateUpper.month) != currentMonth:
+								activityDateTime.upperBound.validAndSetMonth(newDateUpper.month, priority=1)
+							if int(newDateUpper.year) != currentYear:
+								activityDateTime.upperBound.validAndSetYear(newDateUpper.year, priority=1)
 					elif "day" in keyNameList:
 						numOfDays = 1
 						newDate = currentDatetime
@@ -589,7 +685,7 @@ class ActivityDateTimeToUnixFactory:
 							activityDateTime.validAndSetMonth(newDate.month, priority=1)
 						if int(newDate.year) != currentYear:
 							activityDateTime.validAndSetYear(newDate.currentYear, priority=1)
-
+					return
 
 				# if "next" in keyNameList:
 					# change month += 1
@@ -818,14 +914,14 @@ import json
 # )
 
 # result = factory.processRawDatetimeInput("ngọc trinh")
-result_1 = factory.processRawDatetimeInput("bắt đầu từ 17h ngày 12/5/2020 và kết thúc lúc 18h30 ngày 14/5/2020")
-result_2 = factory.processRawDatetimeInput("bắt đầu ngày 11/5/2020 và kết thúc ngày 15/5/2020")
+# result_1 = factory.processRawDatetimeInput("bắt đầu từ 17h ngày 12/5/2020 và kết thúc lúc 18h30 ngày 14/5/2020")
+# result_2 = factory.processRawDatetimeInput("bắt đầu ngày 11/5/2020 và kết thúc ngày 15/5/2020")
 
 # time = [obj.extractAllValue() for obj in result]
-unix_1 = [obj.convertToUnix() for obj in result_1]
-unix_2 = [obj.convertToUnix() for obj in result_2]
-print(unix_1)
-print(unix_2)
+# unix_1 = [obj.convertToUnix() for obj in result_1]
+# unix_2 = [obj.convertToUnix() for obj in result_2]
+# print(unix_1)
+# print(unix_2)
 # import datetime
 # print(
 #     datetime.datetime.fromtimestamp(
@@ -854,5 +950,26 @@ print(unix_2)
 # 	])
 
 
-# TODO: pattern "cuối ... ", split by "-"
-# factory.processRawDatetimeInput("thời gian bắt đầu vào thứ 5 tuần kế nhé")
+
+factory.test_addUpperBoundary(
+	[
+		{"rawDatetime": "thời gian dự thi: vào lúc 9g30 ngày 24/12/2019", "expectedOutput": "lower_bound: 24/12/2019 9:30:0, upper_bound: 24/12/2019 23:59:59"}
+		,{"rawDatetime": "thời gian dự thi: vào lúc 9g ngày 24/12/2019", "expectedOutput": "lower_bound: 24/12/2019 9:0:0, upper_bound: 24/12/2019 23:59:59"}
+		,{"rawDatetime": "thời gian dự thi: vào lúc 0g ngày 24/12/2019", "expectedOutput": "lower_bound: 24/12/2019 0:0:0, upper_bound: 24/12/2019 23:59:59"}
+		,{"rawDatetime": "thời gian dự thi: ngày 24/12/2019", "expectedOutput": "lower_bound: 24/12/2019 0:0:0, upper_bound: 24/12/2019 23:59:59"}
+		,{"rawDatetime": "thời gian dự thi: 12/2019", "expectedOutput": "lower_bound: 1/12/2019 0:0:0, upper_bound: 31/12/2019 23:59:59"}
+		,{"rawDatetime": "thời gian dự thi: năm 2019", "expectedOutput": "lower_bound: 1/6/2019 0:0:0, upper_bound: 31/12/2019 23:59:59"}
+		,{"rawDatetime": "thời gian dự thi: vào ngày mai", "expectedOutput": "lower_bound: 14/6/2020 0:0:0, upper_bound: 14/6/2020 23:59:59"}
+		,{"rawDatetime": "thời gian dự thi: 2 ngày nữa", "expectedOutput": "lower_bound: 15/6/2020 0:0:0, upper_bound: 15/6/2020 23:59:59"}
+		,{"rawDatetime": "thời gian dự thi: 1 ngày trước", "expectedOutput": "lower_bound: 12/6/2020 0:0:0, upper_bound: 12/6/2020 23:59:59"}
+		,{"rawDatetime": "thời gian dự thi: hôm qua", "expectedOutput": "lower_bound: 12/6/2020 0:0:0, upper_bound: 12/6/2020 23:59:59"}
+
+		,{"rawDatetime": "thời gian dự thi: đầu tuần sau", "expectedOutput": "lower_bound: 15/6/2020 0:0:0, upper_bound: 16/6/2020 23:59:59"}
+		,{"rawDatetime": "thời gian dự thi: cuối tuần sau", "expectedOutput": "lower_bound: 20/6/2020 0:0:0, upper_bound: 21/6/2020 23:59:59"}
+		,{"rawDatetime": "thời gian dự thi: thứ 2 tuần sau", "expectedOutput": "lower_bound: 15/6/2020 0:0:0, upper_bound: 15/6/2020 23:59:59"}
+		,{"rawDatetime": "thời gian dự thi: cuối tháng tới", "expectedOutput": "lower_bound: 21/7/2020 0:0:0, upper_bound: 31/7/2020 23:59:59"}
+		,{"rawDatetime": "thời gian dự thi: cuối năm nay", "expectedOutput": "lower_bound: 1/9/2020 0:0:0, upper_bound: 31/12/2020 23:59:59"}
+
+
+	]
+)
