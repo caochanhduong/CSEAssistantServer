@@ -279,17 +279,17 @@ def response_craft(agent_action, state_tracker, confirm_obj,isGreeting=False):
                     if inform_slot != "time":
                         value_match = confirm_obj[inform_slot][0]
                     else:
-                        value_match = convert_from_unix_to_iso_format(confirm_obj[inform_slot][0])
+                        value_match = "sau thời gian " + convert_from_unix_to_iso_format(confirm_obj[inform_slot][0])
                 if check_match:
-                    if inform_slot != "time":
-                        response_match = "\n \n Đúng rồi! {0} là {1}".format(AGENT_INFORM_OBJECT[inform_slot],value_match)
-                    else:
-                        response_match = "\n \n Đúng rồi! {0} là sau thời gian {1}".format(AGENT_INFORM_OBJECT[inform_slot],value_match)
+                    # if inform_slot != "time":
+                    response_match = "\n \n Đúng rồi! {0} là {1}".format(AGENT_INFORM_OBJECT[inform_slot],value_match)
+                    # else:
+                    #     response_match = "\n \n Đúng rồi! {0} là nằm trong khoảng {1}".format(AGENT_INFORM_OBJECT[inform_slot],value_match)
                 else:
-                    if inform_slot != "time":
-                        response_match = "\n \n Sai rồi! {0} không phải là {1}".format(AGENT_INFORM_OBJECT[inform_slot],value_match)
-                    else:
-                        response_match = "\n \n Sai rồi! {0} không phải là sau thời gian {1}".format(AGENT_INFORM_OBJECT[inform_slot],value_match)
+                    # if inform_slot != "time":
+                    response_match = "\n \n Sai rồi! {0} không phải là {1}".format(AGENT_INFORM_OBJECT[inform_slot],value_match)
+                    # else:
+                        # response_match = "\n \n Sai rồi! {0} không phải là nằm trong khoảng {1}".format(AGENT_INFORM_OBJECT[inform_slot],value_match)
 
 
             if inform_slot != "activity":

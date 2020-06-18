@@ -913,10 +913,14 @@ import json
 # 	]
 # )
 
-# result = factory.processRawDatetimeInput("ngọc trinh")
-# result_1 = factory.processRawDatetimeInput("bắt đầu từ 17h ngày 12/5/2020 và kết thúc lúc 18h30 ngày 14/5/2020")
-# result_2 = factory.processRawDatetimeInput("bắt đầu ngày 11/5/2020 và kết thúc ngày 15/5/2020")
+result = factory.processRawDatetimeInput("ngọc trinh")
+result_1 = factory.processRawDatetimeInput("thời gian dự thi: 1 ngày trước")
+result_2 = factory.processRawDatetimeInput("bắt đầu ngày 11/5/2020 và kết thúc ngày 15/5/2020")
 
+
+
+
+print(result_2)
 # time = [obj.extractAllValue() for obj in result]
 # unix_1 = [obj.convertToUnix() for obj in result_1]
 # unix_2 = [obj.convertToUnix() for obj in result_2]

@@ -627,7 +627,7 @@ def find_all_entity(intent,input_sentence):
     
     result_entity_dict={}
     list_order_entity_name = map_intent_to_list_order_entity_name[intent]
-    # print(normalized_input_sentence)
+    print(normalized_input_sentence)
     if 'time' in list_order_entity_name:
         for pattern_time in list_pattern_time:
             # print("pattern_time :{0}".format(pattern_time))
@@ -881,7 +881,8 @@ def find_all_entity(intent,input_sentence):
             for indicator in list_joiner_indicator:
                 normalized_input_sentence = normalized_input_sentence.replace(indicator,' '.join(['✪']*(indicator.count(' ')+1)))
     confirm_obj = None
-    # print(result_entity_dict)
+    print("------------------entity result before confirm")
+    print(result_entity_dict)
     # print(intent)
     if intent in result_entity_dict:
         # print("duongcc")
@@ -984,13 +985,27 @@ def process_message_to_user_request(message,state_tracker):
     # print("-----------------------------user action")
     # print(user_action)
     # Do chỉ có 1 phần tử  lúc parse từ NER nên lấy 0
+
+    # is_range_single = False
     if "time" in user_action['inform_slots'].keys():
         if user_action['inform_slots']["time"] != [] and isinstance(user_action['inform_slots']["time"],list):
             if isinstance(user_action['inform_slots']["time"][0],str):
                 result = factory.processRawDatetimeInput(user_action['inform_slots']["time"][0])
                 if result != []:
-                    unix = [obj.convertToUnix() for obj in result]
-                    user_action['inform_slots']["time"] = unix
+                    if len(result) == 2:
+                        unix = [obj.convertToUnix() for obj in result]
+                        user_action['inform_slots']["time"] = unix
+                    if len(result) == 1:
+                        unix = []
+                        time_obj = result[0]
+                        if time_obj.upperBound != None:
+                            unix.append(time_obj.convertToUnix())
+                            unix.append(time_obj.upperBound.convertToUnix())
+                            user_action['inform_slots']["time"] = unix
+                            # is_range_single = True
+                        else:
+                            print("cannot parse single")
+
                 else:
                     del user_action['inform_slots']["time"]
 
@@ -998,15 +1013,35 @@ def process_message_to_user_request(message,state_tracker):
         if "time" in confirm_obj.keys():
             if confirm_obj["time"] != []:
                 if isinstance(confirm_obj["time"][0],str):
+                    
                     result = factory.processRawDatetimeInput(confirm_obj["time"][0])
                     if result != []:
-                        unix = [obj.convertToUnix() for obj in result]
-                        confirm_obj["time"] = unix
+                        print("result not empty")
+                        if len(result) == 2:
+                            print("result 2")
+                            unix = [obj.convertToUnix() for obj in result]
+                            confirm_obj["time"] = unix
+                        if len(result) == 1:
+                            unix = []
+                            print("result 1")
+                            time_obj = result[0]
+                            if time_obj.upperBound != None:
+                                print("uppberBound is not None")
+                                unix.append(time_obj.convertToUnix())
+                                unix.append(time_obj.upperBound.convertToUnix())
+                                confirm_obj["time"] = unix
+                                # is_range_single = True
+                            else:
+                                print("cannot parse single")
                     else:
-                        confirm_obj["time"]
+                        del confirm_obj["time"]
     print("-----------------------------user action after")
     print(user_action)
+    print("-----------------------------confirm obj after")
+    print(confirm_obj)
     return user_action, confirm_obj
+
+
 
 #TEST
 if __name__ == '__main__':
