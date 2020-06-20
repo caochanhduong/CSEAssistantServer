@@ -138,6 +138,27 @@ def suggest_question():
         result.append(res['message'])
     return jsonify({"code": 200, "result": result})
 
+@app.route('/api/cse-assistant-conversation-manager/latest-activities', methods=['GET'])
+def latest_activity():
+    result_cursor = database.activities.find({}).sort([("time", -1)]).limit(5)
+    result = []
+    for res in result_cursor:
+        res["_id"] = str(res["_id"])
+        result.append(res)
+    for i in range(len(result)):
+        result_data = result[i]
+        if result_data["time"] != []:
+            result_data["time"] = [convert_from_unix_to_iso_format(x) for x in result_data["time"]]
+        if "time_works_place_address_mapping" in result_data and result_data["time_works_place_address_mapping"] is not None:
+            list_obj_map = result_data["time_works_place_address_mapping"]
+            list_result_obj_map = []
+            for obj_map in list_obj_map:
+                if obj_map["time"] not in [None,[]]:
+                    obj_map["time"] = [convert_from_unix_to_iso_format(x) for x in obj_map["time"]]
+                list_result_obj_map.append(obj_map)
+        result_data["time_works_place_address_mapping"] = list_obj_map
+        result[i] = result_data
+    return jsonify({"code": 200, "result": result})
 
 @app.route('/api/cse-assistant-conversation-manager', methods=['POST'])
 def post_api_cse_assistant():
