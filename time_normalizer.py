@@ -3,7 +3,9 @@ from datetime import *
 from calendar import monthrange
 import functools
 import re
+import pytz
 
+localTimezone = pytz.timezone('Asia/Saigon')
 #Constants list:
 date_time_pattern = {
 # 
@@ -166,7 +168,7 @@ advance_time_range = {
 		"middle": [20, 11, 15],
 		"end": {
 			"1": [31, 21, 26],"một": [31, 21, 26],"giêng": [31, 21, 26],
-			"2": [monthrange(int(datetime.today().year),2)[1], 21, 24],"hai": [monthrange(int(datetime.today().year),2)[1], 21, 24],
+			"2": [monthrange(int(datetime.now(localTimezone).year),2)[1], 21, 24],"hai": [monthrange(int(datetime.now(localTimezone).year),2)[1], 21, 24],
 			"3": [31, 21, 26],"ba": [31, 21, 26],
 			"4": [30, 21, 25],"bốn": [30, 21, 25],"tư": [30, 21, 25],
 			"5": [31, 21, 26],"năm": [31, 21, 26],
@@ -223,7 +225,7 @@ separator_list = [
 
 ]
 class ActivityDateTime:
-	def __init__(self, day=1, month=int(datetime.today().month), year=int(datetime.today().year), hour=0, minute=0, second=0):
+	def __init__(self, day=1, month=int(datetime.now(localTimezone).month), year=int(datetime.now(localTimezone).year), hour=0, minute=0, second=0):
 		self.day = day
 		self.month = month
 		self.year = year
@@ -385,7 +387,7 @@ class ActivityDateTimeToUnixFactory:
 				activityDateTime.upperBound = ActivityDateTime(day=activityDateTime
 					.day, month=activityDateTime.month, year=activityDateTime.year, hour=23, minute=59, second=59)
 			elif activityDateTime.others["month"]["priority"] != 0:
-				activityDateTime.upperBound = ActivityDateTime(day=monthrange(int(datetime.today().year),int(activityDateTime.month))[1], month=activityDateTime.month, year=activityDateTime.year, hour=23, minute=59, second=59)
+				activityDateTime.upperBound = ActivityDateTime(day=monthrange(int(datetime.now(localTimezone).year),int(activityDateTime.month))[1], month=activityDateTime.month, year=activityDateTime.year, hour=23, minute=59, second=59)
 			elif activityDateTime.others["year"]["priority"] != 0:
 				activityDateTime.upperBound = ActivityDateTime(day=31, month=12, year=activityDateTime.year, hour=23, minute=59, second=59)
 		else: #contains advance pattern
@@ -566,7 +568,7 @@ class ActivityDateTimeToUnixFactory:
 		
 
 	def catchAdvancePattern(self, rawDatetime, activityDateTime, boundIdx):
-		currentDatetime = datetime.today() 
+		currentDatetime = datetime.now(localTimezone) 
 		currentDay = int(currentDatetime.day)
 		currentMonth = int(currentDatetime.month)
 		currentYear = int(currentDatetime.year)
@@ -629,7 +631,7 @@ class ActivityDateTimeToUnixFactory:
 							activityDateTime.upperBound.validAndSetYear(activityDateTime.year, priority=1)
 
 					elif "week" in keyNameList:
-						week = int(datetime.today().isocalendar()[1]) - 1
+						week = int(datetime.now(localTimezone).isocalendar()[1]) - 1
 						if "next" in keyNameList:
 							week += 1
 						elif "previous" in keyNameList:
@@ -879,39 +881,39 @@ import json
 
 # 	])
 
-# factory.test_catchAdvancePattern(
-# 	[
-# 			{"rawDatetime":"thời gian vào cuối tháng này", "boundIdx": 0, "expectedOutput":"31/{0}/{1} 0:0:0".format(datetime.today().month, datetime.today().year)}
-# 			,{"rawDatetime":"thời gian vào cuối tháng tới", "boundIdx": 0, "expectedOutput":"30/{0}/{1} 0:0:0".format(int(datetime.today().month) + 1, datetime.today().year)}
-# 			,{"rawDatetime":"thời gian vào cuối tháng tới", "boundIdx": 1, "expectedOutput":"21/{0}/{1} 0:0:0".format(int(datetime.today().month) + 1, datetime.today().year)}
-# 			,{"rawDatetime":"thời gian vào cuối tháng tới", "boundIdx": 2, "expectedOutput":"25/{0}/{1} 0:0:0".format(int(datetime.today().month) + 1, datetime.today().year)}
-# 			,{"rawDatetime":"thời gian vào cuối tháng 2", "boundIdx": 0, "expectedOutput":"29/2/{0} 0:0:0".format(datetime.today().year)}
-# 			,{"rawDatetime":"thời gian vào đầu tháng tới", "boundIdx": 0, "expectedOutput":"10/{0}/{1} 0:0:0".format(int(datetime.today().month) + 1, datetime.today().year)}
-# 			,{"rawDatetime":"thời gian vào đầu tháng tư", "boundIdx": 0, "expectedOutput":"10/4/{0} 0:0:0".format(datetime.today().year)}
-# 			,{"rawDatetime":"thời gian vào giữa tháng chạp", "boundIdx": 0, "expectedOutput":"20/12/{0} 0:0:0".format(datetime.today().year)}
-# 			,{"rawDatetime":"thời gian vào đầu tháng chạp", "boundIdx": 0, "expectedOutput":"10/12/{0} 0:0:0".format(datetime.today().year)}
-# 			,{"rawDatetime":"thời gian vào cuối tháng trước", "boundIdx": 0, "expectedOutput":"30/{0}/{1} 0:0:0".format(int(datetime.today().month) - 1, datetime.today().year)}
-# 			,{"rawDatetime":"thời gian vào cuối tháng vừa qua", "boundIdx": 0, "expectedOutput":"30/{0}/{1} 0:0:0".format(int(datetime.today().month) - 1, datetime.today().year)}
-# 			,{"rawDatetime":"thời gian diễn ra vào đầu năm nay", "boundIdx": 0, "expectedOutput":"{0}/4/{1} 0:0:0".format(int(datetime.today().day), datetime.today().year)}
-# 			,{"rawDatetime":"thời gian diễn ra vào đầu năm ngoái", "boundIdx": 0, "expectedOutput":"{0}/4/{1} 0:0:0".format(int(datetime.today().day), int(datetime.today().year) - 1)}
-# 			,{"rawDatetime":"thời gian diễn ra vào đầu năm tới", "boundIdx": 0, "expectedOutput":"{0}/4/{1} 0:0:0".format(int(datetime.today().day), int(datetime.today().year) + 1)}
-# 			,{"rawDatetime":"thời gian diễn ra vào đầu năm tới", "boundIdx": 1, "expectedOutput":"{0}/1/{1} 0:0:0".format(int(datetime.today().day), int(datetime.today().year) + 1)}
-# 			,{"rawDatetime":"thời gian diễn ra vào giữa năm tới", "boundIdx": 1, "expectedOutput":"{0}/5/{1} 0:0:0".format(int(datetime.today().day), int(datetime.today().year) + 1)}
-# 			,{"rawDatetime":"thời gian vào đầu tuần sau", "boundIdx": 0, "expectedOutput":"19/{0}/{1} 0:0:0".format(int(datetime.today().month), datetime.today().year)}
-# 			,{"rawDatetime":"thời gian vào đầu tuần sau", "boundIdx": 1, "expectedOutput":"18/{0}/{1} 0:0:0".format(int(datetime.today().month), datetime.today().year)}
-# 			,{"rawDatetime":"thời gian vào cuối tuần sau", "boundIdx": 0, "expectedOutput":"24/{0}/{1} 0:0:0".format(int(datetime.today().month), datetime.today().year)}
-# 			,{"rawDatetime":"thời gian vào đầu tuần này", "boundIdx": 0, "expectedOutput":"12/{0}/{1} 0:0:0".format(int(datetime.today().month), datetime.today().year)}
-# 			,{"rawDatetime":"thời gian vào đầu tuần trước", "boundIdx": 0, "expectedOutput":"5/{0}/{1} 0:0:0".format(int(datetime.today().month), datetime.today().year)}
-# 			,{"rawDatetime":"thời gian vào 5 ngày tới", "boundIdx": 0, "expectedOutput":"18/{0}/{1} 0:0:0".format(int(datetime.today().month), datetime.today().year)}
-# 			,{"rawDatetime":"thời gian bắt đầu vào ngày mai", "boundIdx": 0, "expectedOutput":"14/{0}/{1} 0:0:0".format(int(datetime.today().month), datetime.today().year)}
-# 			,{"rawDatetime":"thời gian bắt đầu vào thứ 5", "boundIdx": 0, "expectedOutput":"14/{0}/{1} 0:0:0".format(int(datetime.today().month), datetime.today().year)}
-# 			,{"rawDatetime":"thời gian bắt đầu vào thứ 5 tuần sau", "boundIdx": 0, "expectedOutput":"21/{0}/{1} 0:0:0".format(int(datetime.today().month), datetime.today().year)}
-# 			,{"rawDatetime":"thời gian bắt đầu vào thứ ba tuần trước", "boundIdx": 0, "expectedOutput":"5/{0}/{1} 0:0:0".format(int(datetime.today().month), datetime.today().year)}
-# 			,{"rawDatetime":"thời gian bắt đầu vào chủ nhật tuần này", "boundIdx": 0, "expectedOutput":"17/{0}/{1} 0:0:0".format(int(datetime.today().month), datetime.today().year)}
-# 			,{"rawDatetime":"thời gian bắt đầu vào thứ 5 tuần kế nhé", "boundIdx": 0, "expectedOutput":"21/{0}/{1} 0:0:0".format(int(datetime.today().month), datetime.today().year)}
+factory.test_catchAdvancePattern(
+	[
+# 			{"rawDatetime":"thời gian vào cuối tháng này", "boundIdx": 0, "expectedOutput":"31/{0}/{1} 0:0:0".format(datetime.now(localTimezone).month, datetime.now(localTimezone).year)}
+# 			,{"rawDatetime":"thời gian vào cuối tháng tới", "boundIdx": 0, "expectedOutput":"30/{0}/{1} 0:0:0".format(int(datetime.now(localTimezone).month) + 1, datetime.now(localTimezone).year)}
+# 			,{"rawDatetime":"thời gian vào cuối tháng tới", "boundIdx": 1, "expectedOutput":"21/{0}/{1} 0:0:0".format(int(datetime.now(localTimezone).month) + 1, datetime.now(localTimezone).year)}
+# 			,{"rawDatetime":"thời gian vào cuối tháng tới", "boundIdx": 2, "expectedOutput":"25/{0}/{1} 0:0:0".format(int(datetime.now(localTimezone).month) + 1, datetime.now(localTimezone).year)}
+# 			,{"rawDatetime":"thời gian vào cuối tháng 2", "boundIdx": 0, "expectedOutput":"29/2/{0} 0:0:0".format(datetime.now(localTimezone).year)}
+# 			,{"rawDatetime":"thời gian vào đầu tháng tới", "boundIdx": 0, "expectedOutput":"10/{0}/{1} 0:0:0".format(int(datetime.now(localTimezone).month) + 1, datetime.now(localTimezone).year)}
+# 			,{"rawDatetime":"thời gian vào đầu tháng tư", "boundIdx": 0, "expectedOutput":"10/4/{0} 0:0:0".format(datetime.now(localTimezone).year)}
+# 			,{"rawDatetime":"thời gian vào giữa tháng chạp", "boundIdx": 0, "expectedOutput":"20/12/{0} 0:0:0".format(datetime.now(localTimezone).year)}
+# 			,{"rawDatetime":"thời gian vào đầu tháng chạp", "boundIdx": 0, "expectedOutput":"10/12/{0} 0:0:0".format(datetime.now(localTimezone).year)}
+# 			,{"rawDatetime":"thời gian vào cuối tháng trước", "boundIdx": 0, "expectedOutput":"30/{0}/{1} 0:0:0".format(int(datetime.now(localTimezone).month) - 1, datetime.now(localTimezone).year)}
+# 			,{"rawDatetime":"thời gian vào cuối tháng vừa qua", "boundIdx": 0, "expectedOutput":"30/{0}/{1} 0:0:0".format(int(datetime.now(localTimezone).month) - 1, datetime.now(localTimezone).year)}
+# 			,{"rawDatetime":"thời gian diễn ra vào đầu năm nay", "boundIdx": 0, "expectedOutput":"{0}/4/{1} 0:0:0".format(int(datetime.now(localTimezone).day), datetime.now(localTimezone).year)}
+# 			,{"rawDatetime":"thời gian diễn ra vào đầu năm ngoái", "boundIdx": 0, "expectedOutput":"{0}/4/{1} 0:0:0".format(int(datetime.now(localTimezone).day), int(datetime.now(localTimezone).year) - 1)}
+# 			,{"rawDatetime":"thời gian diễn ra vào đầu năm tới", "boundIdx": 0, "expectedOutput":"{0}/4/{1} 0:0:0".format(int(datetime.now(localTimezone).day), int(datetime.now(localTimezone).year) + 1)}
+# 			,{"rawDatetime":"thời gian diễn ra vào đầu năm tới", "boundIdx": 1, "expectedOutput":"{0}/1/{1} 0:0:0".format(int(datetime.now(localTimezone).day), int(datetime.now(localTimezone).year) + 1)}
+# 			,{"rawDatetime":"thời gian diễn ra vào giữa năm tới", "boundIdx": 1, "expectedOutput":"{0}/5/{1} 0:0:0".format(int(datetime.now(localTimezone).day), int(datetime.now(localTimezone).year) + 1)}
+# 			,{"rawDatetime":"thời gian vào đầu tuần sau", "boundIdx": 0, "expectedOutput":"19/{0}/{1} 0:0:0".format(int(datetime.now(localTimezone).month), datetime.now(localTimezone).year)}
+# 			,{"rawDatetime":"thời gian vào đầu tuần sau", "boundIdx": 1, "expectedOutput":"18/{0}/{1} 0:0:0".format(int(datetime.now(localTimezone).month), datetime.now(localTimezone).year)}
+# 			,{"rawDatetime":"thời gian vào cuối tuần sau", "boundIdx": 0, "expectedOutput":"24/{0}/{1} 0:0:0".format(int(datetime.now(localTimezone).month), datetime.now(localTimezone).year)}
+# 			,{"rawDatetime":"thời gian vào đầu tuần này", "boundIdx": 0, "expectedOutput":"12/{0}/{1} 0:0:0".format(int(datetime.now(localTimezone).month), datetime.now(localTimezone).year)}
+# 			,{"rawDatetime":"thời gian vào đầu tuần trước", "boundIdx": 0, "expectedOutput":"5/{0}/{1} 0:0:0".format(int(datetime.now(localTimezone).month), datetime.now(localTimezone).year)}
+# 			,{"rawDatetime":"thời gian vào 5 ngày tới", "boundIdx": 0, "expectedOutput":"18/{0}/{1} 0:0:0".format(int(datetime.now(localTimezone).month), datetime.now(localTimezone).year)}
+			{"rawDatetime":"thời gian bắt đầu vào ngày mai", "boundIdx": 0, "expectedOutput":"21/{0}/{1} 0:0:0".format(int(datetime.now(localTimezone).month), datetime.now(localTimezone).year)}
+# 			,{"rawDatetime":"thời gian bắt đầu vào thứ 5", "boundIdx": 0, "expectedOutput":"14/{0}/{1} 0:0:0".format(int(datetime.now(localTimezone).month), datetime.now(localTimezone).year)}
+# 			,{"rawDatetime":"thời gian bắt đầu vào thứ 5 tuần sau", "boundIdx": 0, "expectedOutput":"21/{0}/{1} 0:0:0".format(int(datetime.now(localTimezone).month), datetime.now(localTimezone).year)}
+# 			,{"rawDatetime":"thời gian bắt đầu vào thứ ba tuần trước", "boundIdx": 0, "expectedOutput":"5/{0}/{1} 0:0:0".format(int(datetime.now(localTimezone).month), datetime.now(localTimezone).year)}
+# 			,{"rawDatetime":"thời gian bắt đầu vào chủ nhật tuần này", "boundIdx": 0, "expectedOutput":"17/{0}/{1} 0:0:0".format(int(datetime.now(localTimezone).month), datetime.now(localTimezone).year)}
+# 			,{"rawDatetime":"thời gian bắt đầu vào thứ 5 tuần kế nhé", "boundIdx": 0, "expectedOutput":"21/{0}/{1} 0:0:0".format(int(datetime.now(localTimezone).month), datetime.now(localTimezone).year)}
 
-# 	]
-# )
+	]
+)
 
 result = factory.processRawDatetimeInput("ngọc trinh")
 result_1 = factory.processRawDatetimeInput("thời gian dự thi: 1 ngày trước")
