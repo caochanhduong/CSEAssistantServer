@@ -251,8 +251,10 @@ class ActivityDateTime:
 		print(self.others)
 		return "{0}/{1}/{2} {3}:{4}:{5}".format(self.day, self.month, self.year, self.hour, self.minute, self.second)
 	def convertToUnix(self):
-		dt = datetime(year=self.year, month=self.month, day=self.day, hour=self.hour, minute=self.minute, second=self.second)
-		return int(dt.replace(tzinfo=timezone(timedelta(hours=7))).timestamp())
+		dt = datetime(year=self.year, month=self.month, day=self.day, hour=self.hour, minute=self.minute, second=self.second, tzinfo=localTimezone)
+		# return int(dt.replace(tzinfo=timezone(timedelta(hours=7))).timestamp())
+		return int(dt.timestamp())
+
 	
 	def validAndSetDay(self, dayString, priority=2):
 		if priority <= self.others["day"]["priority"]:
