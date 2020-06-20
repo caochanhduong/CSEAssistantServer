@@ -251,7 +251,7 @@ class ActivityDateTime:
 		print(self.others)
 		return "{0}/{1}/{2} {3}:{4}:{5}".format(self.day, self.month, self.year, self.hour, self.minute, self.second)
 	def convertToUnix(self):
-		dt = datetime(year=self.year, month=self.month, day=self.day, hour=self.hour, minute=self.minute, second=self.second, tzinfo=localTimezone)
+		dt = datetime(year=self.year, month=self.month, day=self.day, hour=self.hour, minute=self.minute, second=self.second, tzinfo=localTimezone) + timedelta(minutes=7)
 		# return int(dt.replace(tzinfo=timezone(timedelta(hours=7))).timestamp())
 		return int(dt.timestamp())
 
