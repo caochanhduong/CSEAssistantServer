@@ -1,0 +1,20 @@
+- Vỡi mỗi intent, hỏi 3 câu dạng hỏi khác nhau (số intent x 3 câu)
+- Trong quá trình chat
+    agent inform: thử chọn cả 3 trường hợp nút bấm (ok)
+    agent request: thử 1 thông tin có giá trị và 1 anything (ok)
+- confirm:
+    + 1 câu có key bình thường  (ok))
+    + 2 câu có key time (1 lần hỏi key ngoài, 1 lần hỏi key trong trong đó 1 lần hỏi range, 1 lần hỏi single value) (ok)
+- 1 lần hỏi hoạt động không có trong database (fail)
+- 1 câu nhập câu hỏi không liên quan (fail)
+- 1 câu nhập bất kì (pass)
+- 1 câu đúng hoạt động sai thông tin (ok)
+mai chỉ test câu hỏi intent
+docs:
+
+
+gợi ý câu hỏi:
+Thử áp dụng pymongo với fulltextsearch trong link sau 
+https://stackoverflow.com/questions/48371016/pymongo-how-to-use-full-text-search
+
+Nếu chậm quá nghiên cứu ghép thêm elastic search

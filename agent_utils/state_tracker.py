@@ -29,6 +29,8 @@ class StateTracker:
         self.none_state = np.zeros(self.get_state_size())
         self.reset()
         self.current_request_slots = []
+        self.current_results = []
+        self.list_agent_request = []
 
     def get_state_size(self):
         """Returns the state size of the state representation used by the agent."""
@@ -43,6 +45,7 @@ class StateTracker:
         self.history = []
         self.round_num = 0
         self.current_request_slots = []
+        self.list_agent_request = []
 
     def print_history(self):
         """Helper function if you want to see the current history action by action."""
@@ -60,12 +63,14 @@ class StateTracker:
         Returns:
             numpy.array: A numpy array of shape (state size,)
         """
-
+        print("-------------------in getstate in state_tracker")
         # If done then fill state with zeros
         if done:
             return self.none_state
 
         user_action = self.history[-1]
+        print("-------------------------current informs in getstate")
+        print(self.current_informs)
         db_results_dict = self.db_helper.get_db_results_for_slots(self.current_informs)
         last_agent_action = self.history[-2] if len(self.history) > 1 else None
         # print("--------------------------user action")
@@ -192,6 +197,8 @@ class StateTracker:
         return state_representation
 
     def update_state_agent(self, agent_action):
+        print("-------------------in update_state_agent")
+
         """
         Updates the dialogue history with the agent's action and augments the agent's action.
         Takes an agent action and updates the history. Also augments the agent_action param with query information and
@@ -203,11 +210,13 @@ class StateTracker:
         """
 
         if agent_action['intent'] == 'inform':
+            print("-------------------in update_state_agent, agent inform")
+
             assert agent_action['inform_slots']
             # print("intent: inform, current inform_slots: {}".format(self.current_informs))
             # print("current request slot: {}".format(self.current_request_slots))
 
-            inform_slots = self.db_helper.fill_inform_slot(agent_action['inform_slots'], self.current_informs)
+            inform_slots, self.current_results = self.db_helper.fill_inform_slot(agent_action['inform_slots'], self.current_informs)
             agent_action['inform_slots'] = inform_slots
             assert agent_action['inform_slots']
             key, value = list(agent_action['inform_slots'].items())[0]  # Only one
@@ -219,6 +228,8 @@ class StateTracker:
               self.current_informs[key] = value
         # If intent is match_found then fill the action informs with the matches informs (if there is a match)
         elif agent_action['intent'] == 'match_found':
+            print("-------------------in update_state_agent, agent matchfound")
+
             assert not agent_action['inform_slots'], 'Cannot inform and have intent of match found!'
             # print("intent: match found, current informs: {}".format(self.current_informs))
 
@@ -253,13 +264,18 @@ class StateTracker:
                 agent_action['inform_slots'][self.match_key] = 'no match available'
                 ################?????????
             self.current_informs[self.match_key] = agent_action['inform_slots'][self.match_key]
+        ## dùng để detect request lặp lại
+        elif agent_action['intent'] == 'request':
+            self.list_agent_request.append(agent_action)
         agent_action.update({'round': self.round_num, 'speaker': 'Agent'})
         
         self.history.append(agent_action)
-        print("------------------------------------history in update state agent")
-        print(self.history)
+        # print("------------------------------------history in update state agent")
+        # print(self.history)
 
     def update_state_user(self, user_action):
+        print("-------------------in update_state_user")
+
         """
         Updates the dialogue history with the user's action and augments the user's action.
         Takes a user action and updates the history. Also augments the user_action param with necessary information.
@@ -302,7 +318,8 @@ class StateTracker:
         # còn không thì chỉ bỏ vào thông tin chung
         for key, value in user_action['inform_slots'].items():
             self.current_informs[key] = value
-
+        print("current informs in update_state_user")
+        print(self.current_informs)
         #current_request_slots giữ nguyên do request lúc nào cũng chỉ 1 thông tin .
         for key, value in user_action['request_slots'].items():
             if key not in self.current_request_slots:
@@ -310,5 +327,5 @@ class StateTracker:
         user_action.update({'round': self.round_num, 'speaker': 'User'})
         self.history.append(user_action)
         self.round_num += 1
-        print("---------------------------------------------history in update state user")
-        print(self.history)
+        # print("---------------------------------------------history in update state user")
+        # print(self.history)

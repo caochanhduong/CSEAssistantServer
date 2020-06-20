@@ -23,7 +23,7 @@ from agent_utils.state_tracker import StateTracker
 from keras import backend as K
 from pymongo import MongoClient
 import importlib
-
+from copy import deepcopy
 importlib.reload(message_handler)
 from message_handler import *
 
@@ -53,7 +53,7 @@ with open(CONSTANT_FILE_PATH) as f:
 # client = MongoClient()
 client = MongoClient('mongodb://caochanhduong:bikhungha1@ds261626.mlab.com:61626/activity?retryWrites=false')
 database = client.activity
-
+suggest_messages = database.suggest_messages
 
 # state_tracker = StateTracker(database, constants)
 # dqn_agent = DQNAgent(state_tracker.get_state_size(), constants)    
@@ -86,13 +86,13 @@ def process_conversation_POST(state_tracker_id, message):
     print("-----------------------------------user action")
     print(user_action)
     #nếu là câu request mới của user thì reset state tracker và cho confirm về lại None
-    if user_action['request_slots'] != {}:
+    if user_action['request_slots'] != {} or user_action['intent'] == "no_name":
         state_tracker.reset()
         confirm_obj = None
     #nếu có câu confirm request mới thì ghi đè
     if new_confirm_obj != None:
         confirm_obj = new_confirm_obj
-    if user_action['intent'] not in ["hello","other","done","dont_know"] :
+    if user_action['intent'] not in ["hello","other","done","dont_know","no_name"] :
         dqn_agent = DQNAgent(state_tracker.get_state_size(), constants)    
         agent_act = get_agent_response(state_tracker, dqn_agent, user_action)
         StateTracker_Container[state_tracker_id] = (state_tracker,confirm_obj)
@@ -122,18 +122,43 @@ def url_error(e):
 def server_error(e):
     return msg(500, "SERVER ERROR")
 
-
-@app.route('/api/LT-conversation-manager', methods=['POST'])
-def post_api():
-    input_data = request.get_json(force=True)
-    print(input_data)
-    if "message" not in input_data.keys():
+@app.route('/api/cse-assistant-conversation-manager/suggest-question', methods=['POST'])
+def suggest_question():
+    input_data = request.json
+    
+    if "message" not in input_data.keys(): 
         return msg(400, "Message cannot be None")
     else:
         message = input_data["message"]
-        result, probability = extract_and_get_intent(message)
-        probability = probability.tolist()
-    return jsonify({"code": 200, "message": result, "probability": probability})
+    print("-------------------------message")
+    print(message)
+    result_cursor = suggest_messages.find({"$text": {"$search": message}}).limit(5)
+    result = []
+    for res in result_cursor:
+        result.append(res['message'])
+    return jsonify({"code": 200, "result": result})
+
+@app.route('/api/cse-assistant-conversation-manager/latest-activities', methods=['GET'])
+def latest_activity():
+    result_cursor = database.activities.find({}).sort([("time", -1)]).limit(5)
+    result = []
+    for res in result_cursor:
+        res["_id"] = str(res["_id"])
+        result.append(res)
+    for i in range(len(result)):
+        result_data = result[i]
+        if result_data["time"] != []:
+            result_data["time"] = [convert_from_unix_to_iso_format(x) for x in result_data["time"]]
+        if "time_works_place_address_mapping" in result_data and result_data["time_works_place_address_mapping"] is not None:
+            list_obj_map = result_data["time_works_place_address_mapping"]
+            list_result_obj_map = []
+            for obj_map in list_obj_map:
+                if obj_map["time"] not in [None,[]]:
+                    obj_map["time"] = [convert_from_unix_to_iso_format(x) for x in obj_map["time"]]
+                list_result_obj_map.append(obj_map)
+        result_data["time_works_place_address_mapping"] = list_obj_map
+        result[i] = result_data
+    return jsonify({"code": 200, "result": result})
 
 @app.route('/api/cse-assistant-conversation-manager', methods=['POST'])
 def post_api_cse_assistant():
@@ -152,11 +177,58 @@ def post_api_cse_assistant():
     # print(StateTracker_Container)
     K.clear_session()
     current_informs = 'null'
+    current_results = []
     agent_message , agent_action = process_conversation_POST(state_tracker_id, message)
+    print("StateTracker_Container[state_tracker_id][0].current_informs before assign")
+    print(state_tracker_id)
+    print(StateTracker_Container[state_tracker_id][0].current_informs)
     if agent_action['intent'] in ["match_found","inform"]:
-        current_informs = StateTracker_Container[state_tracker_id][0].current_informs
+        current_informs = deepcopy(StateTracker_Container[state_tracker_id][0].current_informs)
+        if agent_action['intent'] == "inform":
+            current_results = deepcopy(StateTracker_Container[state_tracker_id][0].current_results)
+    
+    # ###########chuyển đổi time trong các kết quả matchfound
+    if agent_action['intent'] == "match_found":
+        print("--------------------------agent_action")
+        print(agent_action)
+        if agent_action['inform_slots']['activity'] != "no match available":
+            activity_key = agent_action['inform_slots']['activity']
+            list_result_data = agent_action['inform_slots'][activity_key]
+            for i in range(len(list_result_data)):
+                result_data = list_result_data[i]
+                if result_data["time"] != []:
+                    result_data["time"] = [convert_from_unix_to_iso_format(x) for x in result_data["time"]]
+                if "time_works_place_address_mapping" in result_data and result_data["time_works_place_address_mapping"] is not None:
+                    list_obj_map = result_data["time_works_place_address_mapping"]
+                    list_result_obj_map = []
+                    for obj_map in list_obj_map:
+                        if obj_map["time"] not in [None,[]]:
+                            obj_map["time"] = [convert_from_unix_to_iso_format(x) for x in obj_map["time"]]
+                        list_result_obj_map.append(obj_map)
+                result_data["time_works_place_address_mapping"] = list_obj_map
+                agent_action['inform_slots'][activity_key][i] = result_data
+
+
+    ################ chuyển đổi time trong current inform về dạng chuẩn ISO thời gian để hiển thị cho người dùng
+    if current_informs != "null":
+        print("-------------------------------current_informs")
+        print(current_informs)
+        if "time" in current_informs.keys():
+            if isinstance(current_informs["time"],list):
+                if len(current_informs["time"]) > 1: #==2
+                    current_informs["time"] = ["bắt đầu từ {0} và kết thúc lúc {1}".format(convert_from_unix_to_iso_format(current_informs["time"][0]),convert_from_unix_to_iso_format(current_informs["time"][1]))]
+                elif len(current_informs["time"]) == 1:
+                    current_informs["time"] = [convert_from_unix_to_iso_format(current_informs["time"][0])]
+        # StateTracker_Container[state_tracker_id][0].current_informs = current_informs
+        print("StateTracker_Container[state_tracker_id][0].current_informs after assign")
+        print(state_tracker_id)
+        print(StateTracker_Container[state_tracker_id][0].current_informs)
+
+
+    print("---------------------------current result")
+    print(current_results)
     K.clear_session()
-    return jsonify({"code": 200, "message": agent_message,"state_tracker_id":state_tracker_id,"agent_action":agent_action,"current_informs":current_informs})
+    return jsonify({"code": 200, "message": agent_message,"state_tracker_id":state_tracker_id,"agent_action":agent_action,"current_informs":current_informs,"current_results":current_results})
 
 @app.route('/api/cse-assistant-conversation-manager/reset-state-tracker', methods=['POST'])
 def post_api_cse_assistant_reset_state_tracker():
@@ -187,55 +259,19 @@ def post_api_cse_assistant_reset_state_tracker():
     K.clear_session()
     return jsonify({"code": code, "message": message,"state_tracker_id":state_tracker_id})
 
-
-@app.route('/api/LT-conversation-manager/extract-information', methods=['POST'])
-def post_api_extract_information():
-    input_data = request.json
-    print(input_data)
-    if "message" not in input_data.keys():
-        return msg(400, "Message cannot be None")
-    else:
-        message = input_data["message"]
-        print(message)
-        emails, phones, names = extract_information(message)
-        print(emails)
-        print(phones)
-    return jsonify({"code": 200, "emails": emails, "phones": phones, "names": names})
-
-
-@app.route("/api/LT-conversation-manager/messages", methods=['POST'])
+@app.route("/api/cse-assistant-conversation-manager/messages", methods=['POST'])
 def user_profile():
     input_data = request.json
     print(input_data)
     if "message" not in input_data.keys():
         return msg(400, "Message cannot be None")
-    if "intent" not in input_data.keys():
-        return msg(400, "Intent cannot be None")
-    user_id = input_data["user_id"]
+    state_tracker_id = input_data["state_tracker_id"]
     message = input_data["message"]
-    intent = input_data["intent"]
-    is_correct = input_data["is_correct"]
 
     mongo.db.messages.insert_one(
-        {"user_id": user_id, "message": message, "intent": intent, "is_correct": is_correct})
+        {"state_tracker_id": state_tracker_id, "message": message})
         
     return jsonify({"code": 200, "message": "insert successed!"})
-
-@app.route('/api/LT-conversation-manager/classify-message', methods=['POST'])
-def post_api_classify_message():
-    input_data = request.get_json(force=True)
-    print(input_data)
-    if "message" not in input_data.keys():
-        return msg(400, "Message cannot be None")
-    else:
-        message = input_data["message"]
-        # if check_question(message):
-        #     result, probability = extract_and_get_intent(message)
-        # else:
-        #     result=""
-        result, probability = extract_and_get_intent(message)
-    return jsonify({"is_question": check_question(message), "intent": result})
-
 
 if __name__ == '__main__':
     app.run()

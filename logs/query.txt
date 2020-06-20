@@ -139,3 +139,23 @@ Problem:
 	+ lúc agent action là inform (inform key chung và các object thỏa điều kiện) thì trong ma trận agent_inform_slots_rep trong state  tính luôn các key của các object thỏa điều kiện 
 	+ current_request_slots giữ nguyên do request lúc nào cũng chỉ 1 thông tin .
 	+ 
+
+
+
+
+
+
+Chuẩn hóa thời gian:
++ chuẩn hóa câu nhập vào của user
++ chỉ cần sửa dbquery và agent response gen
+
+
+
+import datetime
+print(
+    datetime.datetime.fromtimestamp(
+        int("1589382961")
+    ).strftime('%d-%m-%Y %H:%M:%S')
+)
+
+

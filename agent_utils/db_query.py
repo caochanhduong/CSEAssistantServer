@@ -1,12 +1,12 @@
 from collections import defaultdict
 from .dialogue_config import no_query_keys, usersim_default_key
 import copy
- 
 from flask import Flask, request, jsonify
 from flask_pymongo import PyMongo
 from flask_cors import CORS
 import re
 from pymongo import MongoClient
+import datetime
 
 ###### tạm thời để đây vì import từ constants báo lỗi no module name constants
 list_map_key = ["works", "name_place", "address", "time"]
@@ -18,7 +18,9 @@ list_map_key = ["works", "name_place", "address", "time"]
 # mongo = PyMongo(app)
  
  
- 
+def convert_from_unix_to_iso_format(input_unix_timestamp):
+    return datetime.datetime.fromtimestamp(input_unix_timestamp).strftime('%d-%m-%Y %H:%M:%S')
+
  
 # client = MongoClient()
 # client = MongoClient('mongodb://caochanhduong:bikhungha1@ds261626.mlab.com:61626/activity?retryWrites=false')
@@ -43,6 +45,8 @@ class DBQuery:
         self.match_key = usersim_default_key
  
     def fill_inform_slot(self, inform_slot_to_fill, current_inform_slots):
+        #TO TO :lấy kết quả VALUE có count max từ _count_slot_values, sau đó search lại trong db_results lấy giá trị đầu
+	    # tiên có value giống với VALUE có count max (1 module) và trả về các object thỏa current inform (1 module) cũng như value max đó về
         """
         Given the current informs/constraints fill the informs that need to be filled with values from the database.
  
@@ -56,7 +60,7 @@ class DBQuery:
         Returns:
             dict: inform_slot_to_fill filled with values
         """
- 
+        print("-----------------------------fill_inform_slot")
         # For this simple system only one inform slot should ever passed in
         assert len(inform_slot_to_fill) == 1
  
@@ -88,11 +92,15 @@ class DBQuery:
                     db_results_no_empty[i] = copy.deepcopy(data)
       
         filled_inform = {}
+        db_results_search = {}
+        current_results = []
         if db_results_no_empty:
             values_dict = self._count_slot_values(key, db_results_no_empty)
+            db_results_search = db_results_no_empty
             # printprint("INFORM: filtered out, values_dict: {}".format(values_dict))
         else:
             values_dict = self._count_slot_values(key, db_results)
+            db_results_search = db_results_no_empty
             # print("INFORM: can not filtered out, values_dict: {}".format(values_dict))
 
         if key == usersim_default_key:
@@ -103,9 +111,35 @@ class DBQuery:
         else:
             filled_inform[key] = 'no match available'
 
-        return filled_inform
+        value_search = filled_inform[key]
+        ## counter for limit 5 activities
+        counter = 0
+        if isinstance(value_search, list):
+            for id in db_results_search.keys():
+                if counter == 5:
+                    break
+                result_data = db_results_search[id]
+                if result_data["time"] != []:
+                    result_data["time"] = [convert_from_unix_to_iso_format(x) for x in result_data["time"]]
+                if "time_works_place_address_mapping" in result_data and result_data["time_works_place_address_mapping"] is not None:
+                    list_obj_map = result_data["time_works_place_address_mapping"]
+                    list_result_obj_map = []
+                    for obj_map in list_obj_map:
+                        if obj_map["time"] not in [None,[]]:
+                            obj_map["time"] = [convert_from_unix_to_iso_format(x) for x in obj_map["time"]]
+                        list_result_obj_map.append(obj_map)
+                result_data["time_works_place_address_mapping"] = list_obj_map
+                current_results.append(result_data)
+                counter = counter + 1
+
+        return filled_inform, current_results
  
     def _count_slot_values(self, key, db_subdict):
+        # TO DO: _count_slot_values: đối với các key bình thường thì đếm các value của từng key bình thường, còn đối với các 
+    # key đặc biệt thì viết 1 module lấy current_inform ra, từ đó lấy ra được giá trị mà đi chung với điều kiện các key 
+    # đặc biệt trong current inform rồi mới đếm (ví dụ dùng key works, name_place trong current_inform để xác định value 
+    # của key time đi chung với works, name_place trong current_inform, sau đó đếm sự xuất hiện của từng value trong 
+    # db_subdict) 
         """
         Return a dict of the different values and occurrences of each, given a key, from a sub-dict of database
  
@@ -116,7 +150,8 @@ class DBQuery:
         Returns:
             dict: The values and their occurrences given the key
         """
- 
+        print("-----------------------------_count_slot_values")
+
         slot_values = defaultdict(int)  # init to 0
         for id in db_subdict.keys():
             current_option_dict = db_subdict[id]
@@ -158,6 +193,7 @@ class DBQuery:
 
  
     def get_db_results(self, constraints):
+        # TO DO
         """
         Get all items in the database that fit the current constraints.
  
@@ -170,7 +206,8 @@ class DBQuery:
         Returns:
             dict: The available items in the database
         """
- 
+        print("-----------------------------in get_db_results")
+
         # Filter non-queryable items and keys with the value 'anything' since those are inconsequential to the constraints
         new_constraints = {k: v for k, v in constraints.items() if k not in self.no_query and v != 'anything' and v != 'no match available'}
         # print("-----------------------------------DIEU KIEN")
@@ -199,7 +236,7 @@ class DBQuery:
         print("-----------------------------------KET QUA")
         
         for result in results:
-            print(result)
+            # print(result)
             #đổi từ object id sang string và dùng id đó làm key (thay vì dùng index của mảng để làm key vì không xác định đc index)
             result["_id"] = str(result["_id"])
             available_options.update({result['_id']:result})
@@ -228,6 +265,10 @@ class DBQuery:
  
         return available_options
     def get_db_results_for_slots(self, current_informs):
+         #  TO DO:   + get_db_results_for_slots: viết 1 module để với mỗi key thì chỉ current inform còn các giá trị của chỉ key đó 
+	# (ví dụ current inform có time, works ở ngoài và trong thì khi xét time chỉ xét time ở ngoài và trong, bỏ hết các giá trị 
+	# của key works), còn với các key 
+	# bình thường thì làm như bình thường (key:value)
         """
         Counts occurrences of each current inform slot (key and value) in the database items.
  
@@ -240,7 +281,8 @@ class DBQuery:
         Returns:
             dict: Each key in current_informs with the count of the number of matches for that key
         """
- 
+        print("-----------------------------get_db_results_for_slots")
+
         # The items (key, value) of the current informs are used as a key to the cached_db_slot
         # print()
         # print(type(self.cached_db_slot))
@@ -303,6 +345,13 @@ class DBQuery:
     #     return regex_constraint_dict
 
     def convert_to_regex_constraint(self, constraints):
+        # TO DO :
+        # + Chỗ convertregextoconstraint không cần phân biệt câu đầu tiên hay câu quá trình hội thoại, 
+        # chỉ cần viết thêm 1 module lọc ra các key nào nằm ở cả key chung và trong object và đem các key đó 
+        # đi query CÙNG NHAU ở ngoài và trong, 
+	    # còn lại query theo ở ngoài
+        print("-----------------------------convert_to_regex_constraint")
+
         list_and_out = []
         list_and_in = []
         ele_match_obj = {}
@@ -316,29 +365,69 @@ class DBQuery:
                 if list_pattern != []:
                     list_and_out.append({k: {"$all": list_pattern}})
             else:
-                for value in values:
-                    list_and_in.append({
-                        "$or" : [
-                                    {
-                                        k: {
-                                            "$all": [re.compile(".*{0}.*".format(value))]
-                                        }
-                                    },
-                                    {    
-                                        "time_works_place_address_mapping": {
-                                            "$all": [
-                                                        {
-                                                            "$elemMatch": {
-                                                                    k: {
-                                                                        "$all": [re.compile(".*{0}.*".format(value))]
-                                                                    }
+                if k!="time":
+                    for value in values:
+                        list_and_in.append({
+                            "$or" : [
+                                        {
+                                            k: {
+                                                "$all": [re.compile(".*{0}.*".format(value))]
+                                            }
+                                        },
+                                        {    
+                                            "time_works_place_address_mapping": {
+                                                "$all": [
+                                                            {
+                                                                "$elemMatch": {
+                                                                        k: {
+                                                                            "$all": [re.compile(".*{0}.*".format(value))]
+                                                                        }
+                                                                }
                                                             }
-                                                        }
-                                                    ]
+                                                        ]
+                                            }
                                         }
-                                    }
-                                ]
-                    })
+                                    ]
+                        })
+                else:
+                    if len(values) == 2: 
+                        list_and_in.append({
+                            "$or" : [
+                                {
+                                    k: { "$elemMatch" : {"$gte": values[0],"$lte": values[1]} }
+                                },
+                                {
+                                    "time_works_place_address_mapping": {
+                                                    "$all": [
+                                                                {
+                                                                    "$elemMatch": {
+                                                                       k: { "$elemMatch" : {"$gte": values[0],"$lte": values[1]} }
+                                                                    }
+                                                                }
+                                                            ]
+                                                }
+                                }
+                            ]
+                        })
+                    if len(values) == 1: 
+                        list_and_in.append({
+                            "$or" : [
+                                {
+                                    k: { "$size": 1, "$elemMatch" : {"$gte": values[0]} }
+                                },
+                                {
+                                    "time_works_place_address_mapping": {
+                                                    "$all": [
+                                                                {
+                                                                    "$elemMatch": {
+                                                                       k: { "$size": 1, "$elemMatch" : {"$gte": values[0]} }
+                                                                    }
+                                                                }
+                                                            ]
+                                                }
+                                }
+                            ]
+                        })
 
         if list_and_in != []:
             list_and_out.append({"$and": list_and_in})
@@ -354,5 +443,5 @@ class DBQuery:
 # client = MongoClient('mongodb://caochanhduong:bikhungha1@ds261626.mlab.com:61626/activity?retryWrites=false')
 # database = client.activity
 # dbquery = DBQuery(database)
-# print(dbquery.get_db_results({"name_activity":["đêm vui tất niên tết ấm áp","c"],"time":["10h","15/01/19"],"works": ["ức"]}))
-# print(dbquery.convert_to_regex_constraint({"name_activity":["đêm vui tất niên tết ấm áp"],"time":["10h","15/01/20"]}))
+# print(dbquery.get_db_results({"name_activity":["mùa hè xanh"],"time":[1588870800]}))
+# # print(dbquery.convert_to_regex_constraint({"name_activity":["đêm vui tất niên tết ấm áp"],"time":["10h","15/01/20"]}))

@@ -19,7 +19,8 @@ with open('/home/lap11305/LVTN/CSEAssistantServer/real_dict_2000_new_only_delete
         db_key_res = db.dictionary.find({"type":key})
         results = []
         for result in db_key_res:
-            results.append(result["value"])
+            if isinstance(result["value"],str):
+                results.append(result["value"])
         update_real_dict[key] = list(set(results))
         update_real_dict[key].sort()
         real_dict[key] = list(set(real_dict[key]))

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
-# from agent_utils.state_tracker import StateTracker
+from agent_utils.state_tracker import StateTracker
 from sklearn.externals import joblib
 import numpy as np
 from sklearn import preprocessing
@@ -16,12 +16,18 @@ import json
 from collections import OrderedDict
 import re
 from constants import *
-
+import datetime
+from time_normalizer import factory
+# from api_conversation_manager import database
 # imp.reload(real_dict)
 
 def sentence_to_index_vector(input_sentence):
   list_token=input_sentence.split(' ')
   return vocab.numericalize(list_token)
+
+def convert_from_unix_to_iso_format(input_unix_timestamp):
+    return datetime.datetime.fromtimestamp(input_unix_timestamp).strftime('%d-%m-%Y %H:%M:%S')
+
 
 def check_match_sublist_and_substring(list_children,list_parent):
         # print("match sublist")
@@ -37,6 +43,24 @@ def check_match_sublist_and_substring(list_children,list_parent):
             # print("match sublist")
             return True
         return False
+
+def check_match_time(list_children, list_parent):
+    print("----------list_children")
+    print(list_children)
+    print("----------list_parent")
+    print(list_parent)
+
+    if list_children == list_parent:
+        return True
+    if len(list_children) == 1 and len(list_parent) != 0:
+        if list_children[0] <= list_parent[0]:
+            return True
+    if len(list_children) == 2 and len(list_parent) == 2:
+        if list_children[0] <= list_parent[0] and list_children[1] >= list_parent[1]:
+            return True
+    return False
+
+
 
 def forward_dropout(input_sentence):
   t = torch.tensor([sentence_to_index_vector(input_sentence)])
@@ -606,8 +630,8 @@ def find_all_entity(intent,input_sentence):
     print(normalized_input_sentence)
     if 'time' in list_order_entity_name:
         for pattern_time in list_pattern_time:
+            # print("pattern_time :{0}".format(pattern_time))
             if re.findall(pattern_time,normalized_input_sentence)!=[]:
-                # print("pattern_time :{0}".format(pattern_time))
                 if 'time' not in result_entity_dict:
                     result_entity_dict['time'] = delete_last_space_list(re.findall(pattern_time,normalized_input_sentence))
                 else:
@@ -617,7 +641,7 @@ def find_all_entity(intent,input_sentence):
         # if 'time' in result_entity_dict:
         #     print(result_entity_dict['time'])
     if 'reward' in list_order_entity_name:
-        print("hellllllllllllllllllo")
+        # print("hellllllllllllllllllo")
         for pattern_reward in list_pattern_reward:
             if re.findall(pattern_reward,normalized_input_sentence)!=[]:
                 # print("pattern_reward :{0}".format(pattern_reward))
@@ -648,9 +672,9 @@ def find_all_entity(intent,input_sentence):
     for entity_name in map_intent_to_list_order_entity_name[intent]:
         ordered_real_dict[entity_name] = real_dict[entity_name]
     for entity_name, list_entity in ordered_real_dict.items():
-        print(entity_name)
+        # print(entity_name)
         list_entity = [preprocess_message(entity) for entity in list_entity]
-        print("input sentence: {0}".format(normalized_input_sentence))
+        # print("input sentence: {0}".format(normalized_input_sentence))
         if entity_name in ["works","register","reward"]:
             matching_threshold = 0.5
         elif entity_name == "joiner":
@@ -771,8 +795,8 @@ def find_all_entity(intent,input_sentence):
 #             print("end_common_index: {0}".format(end_common_index))
 #             print("1. greatest_common_length : {0}".format(greatest_common_length))
             # print(max_match_entity)
-            if greatest_entity_index != None:
-                print("2. greatest entity : {0}".format(list_entity[greatest_entity_index]))
+            # if greatest_entity_index != None:
+                # print("2. greatest entity : {0}".format(list_entity[greatest_entity_index]))
 #             print("2.1 greatest_end_common_index: {0}".format(greatest_end_common_index))
 #             print("3. sentence match: {0}".format(list_sentence_token[greatest_end_common_index - greatest_common_length +1 :greatest_end_common_index +1]))
             
@@ -849,7 +873,7 @@ def find_all_entity(intent,input_sentence):
                     list_sentence_token[greatest_end_common_index - greatest_common_length +1 :greatest_end_common_index +1] = ["✪"]*greatest_common_length
                     normalized_input_sentence = ' '.join(list_sentence_token)
             catch_entity_threshold_loop = catch_entity_threshold_loop + 1
-            print("output sentence: {0}".format(normalized_input_sentence))
+            # print("output sentence: {0}".format(normalized_input_sentence))
         # print("result entity dict : {0}".format(result_entity_dict))
         
         #sau khi bắt xong hết các name_activity thì xóa hết indicator của joiner: được tham gia,được đi,vv
@@ -857,7 +881,8 @@ def find_all_entity(intent,input_sentence):
             for indicator in list_joiner_indicator:
                 normalized_input_sentence = normalized_input_sentence.replace(indicator,' '.join(['✪']*(indicator.count(' ')+1)))
     confirm_obj = None
-    # print(result_entity_dict)
+    print("------------------entity result before confirm")
+    print(result_entity_dict)
     # print(intent)
     if intent in result_entity_dict:
         # print("duongcc")
@@ -879,9 +904,14 @@ def process_message_to_user_request(message,state_tracker):
             result_entity_dict, confirm_obj = find_all_entity(intent,processed_message)
             # print(result_entity_dict)
             # print(intent)
-            user_action['intent'] = 'request'
-            user_action['inform_slots'] = result_entity_dict
-            user_action['request_slots'] = {intent:'UNK'}
+            if "name_activity" not in result_entity_dict.keys() and intent != "name_activity":
+                user_action['intent'] = 'no_name'
+                user_action['inform_slots'] = {}
+                user_action['request_slots'] = {}
+            else:
+                user_action['intent'] = 'request'
+                user_action['inform_slots'] = result_entity_dict
+                user_action['request_slots'] = {intent:'UNK'}
         elif intent == 'not intent':
             #get agent request key for user to inform (not intent)
             # tránh những câu inform ngay từ ban đầu mà không biết intent
@@ -947,11 +977,71 @@ def process_message_to_user_request(message,state_tracker):
             for key in user_action["inform_slots"].keys():
                 if isinstance(user_action["inform_slots"][key],list):
                     for i in range(len(user_action["inform_slots"][key])):
-                        user_action["inform_slots"][key][i] = preprocess_message(user_action["inform_slots"][key][i])
+                        if isinstance(user_action["inform_slots"][key][i],str):
+                            user_action["inform_slots"][key][i] = preprocess_message(user_action["inform_slots"][key][i])
+                        else:
+                            user_action["inform_slots"][key][i] = user_action["inform_slots"][key][i]
     
     # print("-----------------------------user action")
     # print(user_action)
+    # Do chỉ có 1 phần tử  lúc parse từ NER nên lấy 0
+
+    # is_range_single = False
+    if "time" in user_action['inform_slots'].keys():
+        if user_action['inform_slots']["time"] != [] and isinstance(user_action['inform_slots']["time"],list):
+            if isinstance(user_action['inform_slots']["time"][0],str):
+                result = factory.processRawDatetimeInput(user_action['inform_slots']["time"][0])
+                if result != []:
+                    if len(result) == 2:
+                        unix = [obj.convertToUnix() for obj in result]
+                        user_action['inform_slots']["time"] = unix
+                    if len(result) == 1:
+                        unix = []
+                        time_obj = result[0]
+                        if time_obj.upperBound != None:
+                            unix.append(time_obj.convertToUnix())
+                            unix.append(time_obj.upperBound.convertToUnix())
+                            user_action['inform_slots']["time"] = unix
+                            # is_range_single = True
+                        else:
+                            print("cannot parse single")
+
+                else:
+                    del user_action['inform_slots']["time"]
+
+    if confirm_obj != None:
+        if "time" in confirm_obj.keys():
+            if confirm_obj["time"] != []:
+                if isinstance(confirm_obj["time"][0],str):
+                    
+                    result = factory.processRawDatetimeInput(confirm_obj["time"][0])
+                    if result != []:
+                        print("result not empty")
+                        if len(result) == 2:
+                            print("result 2")
+                            unix = [obj.convertToUnix() for obj in result]
+                            confirm_obj["time"] = unix
+                        if len(result) == 1:
+                            unix = []
+                            print("result 1")
+                            time_obj = result[0]
+                            if time_obj.upperBound != None:
+                                print("uppberBound is not None")
+                                unix.append(time_obj.convertToUnix())
+                                unix.append(time_obj.upperBound.convertToUnix())
+                                confirm_obj["time"] = unix
+                                # is_range_single = True
+                            else:
+                                print("cannot parse single")
+                    else:
+                        del confirm_obj["time"]
+    print("-----------------------------user action after")
+    print(user_action)
+    print("-----------------------------confirm obj after")
+    print(confirm_obj)
     return user_action, confirm_obj
+
+
 
 #TEST
 if __name__ == '__main__':
@@ -984,5 +1074,5 @@ if __name__ == '__main__':
     # print(list_extra_word)
     # print(vocab.stoi["sẻ"])
     # state_tracker = StateTracker(database, constants)
-    # process_message_to_user_request("cho mình hỏi đối tượng tham gia của hoạt động an toàn thực phẩm và an ninh lương thực",state_tracker)
+    # process_message_to_user_request("cho mình hỏi thời gian của hoạt động mùa hè xanh cuối tháng 8 với",state_tracker)
     pass

@@ -1,0 +1,4 @@
+mongo --host ds261626.mlab.com --port 61626 --username caochanhduong activity
+rồi gõ pass
+
+db.suggest_messages.createIndex({ message: "text" } );
