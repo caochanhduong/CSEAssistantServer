@@ -22,9 +22,9 @@ with open('/home/lap11305/LVTN/CSEAssistantServer/real_dict_2000_new_only_delete
             if isinstance(result["value"],str):
                 results.append(result["value"])
         update_real_dict[key] = list(set(results))
-        update_real_dict[key].sort()
+        update_real_dict[key].sort(reverse=True,key=len)
         real_dict[key] = list(set(real_dict[key]))
-        real_dict[key].sort()
+        real_dict[key].sort(reverse=True,key=len)
     #check length first
     for key in list(real_dict.keys()):
         if len(real_dict[key]) != len(update_real_dict[key]):

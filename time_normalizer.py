@@ -162,6 +162,14 @@ for day in atomic["head"]:
 				advance_time["{0}_of_{1}_week".format(day, navigate)] += ["{0} {1}".format(dayValue, navigateValue) for dayValue in atomic[day] for navigateValue in atomic[navigate]]
 			advance_time["{0}_of_week".format(day)] = ["{}".format(dayValue) for dayValue in atomic[day]]
 
+
+print(advance_time)
+list_all_pattern = []
+for key in advance_time.keys():
+	list_all_pattern = list_all_pattern + advance_time[key]
+
+list_all_pattern.sort(reverse=True,key=len)
+print(list_all_pattern)
 advance_time_range = {
 	"month":{
 		"begin": [10, 1, 5],
@@ -917,15 +925,28 @@ factory.test_catchAdvancePattern(
 	]
 )
 
-result = factory.processRawDatetimeInput("ngọc trinh")
+result = factory.processRawDatetimeInput("đầu tháng sau")
 result_1 = factory.processRawDatetimeInput("thời gian dự thi: 1 ngày trước")
-result_2 = factory.processRawDatetimeInput("bắt đầu ngày 11/5/2020 và kết thúc ngày 15/5/2020")
+result_2 = factory.processRawDatetimeInput("bắt đầu lúc 12h ngày 20 - 06 - 2021 và kết thúc lúc 12h ngày 01 - 08 - 2021")
+print(type(result_2))
+print([x.convertToUnix() for x in factory.processRawDatetimeInput("bắt đầu lúc 12h ngày 20 - 06 - 2021 và kết thúc lúc 12h ngày 01 - 08 - 2021")])
+print([x.convertToUnix() for x in factory.processRawDatetimeInput("bắt đầu lúc 12h ngày 20 - 06 - 2020 và kết thúc lúc 12h ngày 01 - 08 - 2020")])
 
+result_2 = []
+factory = ActivityDateTimeToUnixFactory()
 
+result_2 = factory.processRawDatetimeInput("bắt đầu lúc 12h ngày 20 - 06 - 2020 và kết thúc lúc 12h ngày 01 - 08 - 2020")
+
+print([x.convertToUnix() for x in factory.processRawDatetimeInput("bắt đầu lúc 12h ngày 20 - 06 - 2020 và kết thúc lúc 12h ngày 01 - 08 - 2020")])
 
 
 print(result_2)
-# time = [obj.extractAllValue() for obj in result]
+time = [obj.upperBound.convertToUnix() for obj in result]
+print(time)
+
+def convert_from_unix_to_iso_format(input_unix_timestamp):
+    return (datetime.fromtimestamp(input_unix_timestamp,localTimezone)).strftime('%d-%m-%Y %H:%M:%S')
+print(convert_from_unix_to_iso_format(time[0]))
 # unix_1 = [obj.convertToUnix() for obj in result_1]
 # unix_2 = [obj.convertToUnix() for obj in result_2]
 # print(unix_1)

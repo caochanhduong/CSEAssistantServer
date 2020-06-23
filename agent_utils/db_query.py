@@ -6,8 +6,10 @@ from flask_pymongo import PyMongo
 from flask_cors import CORS
 import re
 from pymongo import MongoClient
-import datetime
+from datetime import *
+import pytz
 
+localTimezone = pytz.timezone('Asia/Saigon')
 ###### tạm thời để đây vì import từ constants báo lỗi no module name constants
 list_map_key = ["works", "name_place", "address", "time"]
 
@@ -19,9 +21,7 @@ list_map_key = ["works", "name_place", "address", "time"]
  
  
 def convert_from_unix_to_iso_format(input_unix_timestamp):
-    return datetime.datetime.fromtimestamp(input_unix_timestamp).strftime('%d-%m-%Y %H:%M:%S')
-
- 
+    return (datetime.fromtimestamp(input_unix_timestamp,localTimezone)).strftime('%d-%m-%Y %H:%M:%S')
 # client = MongoClient()
 # client = MongoClient('mongodb://caochanhduong:bikhungha1@ds261626.mlab.com:61626/activity?retryWrites=false')
 # db = client.activity

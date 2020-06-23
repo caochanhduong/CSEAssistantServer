@@ -16,8 +16,11 @@ import json
 from collections import OrderedDict
 import re
 from constants import *
-import datetime
+from datetime import *
 from time_normalizer import factory
+import pytz
+
+localTimezone = pytz.timezone('Asia/Saigon')
 # from api_conversation_manager import database
 # imp.reload(real_dict)
 
@@ -26,9 +29,7 @@ def sentence_to_index_vector(input_sentence):
   return vocab.numericalize(list_token)
 
 def convert_from_unix_to_iso_format(input_unix_timestamp):
-    return datetime.datetime.fromtimestamp(input_unix_timestamp).strftime('%d-%m-%Y %H:%M:%S')
-
-
+    return (datetime.fromtimestamp(input_unix_timestamp,localTimezone)).strftime('%d-%m-%Y %H:%M:%S')
 def check_match_sublist_and_substring(list_children,list_parent):
         # print("match sublist")
         count_match=0
@@ -902,8 +903,8 @@ def process_message_to_user_request(message,state_tracker):
         user_action = {}
         if intent not in ['hello','done','not intent','thanks','anything',"other"]:
             result_entity_dict, confirm_obj = find_all_entity(intent,processed_message)
-            # print(result_entity_dict)
-            # print(intent)
+            print(result_entity_dict)
+            print(intent)
             if "name_activity" not in result_entity_dict.keys() and intent != "name_activity":
                 user_action['intent'] = 'no_name'
                 user_action['inform_slots'] = {}
@@ -982,20 +983,29 @@ def process_message_to_user_request(message,state_tracker):
                         else:
                             user_action["inform_slots"][key][i] = user_action["inform_slots"][key][i]
     
-    # print("-----------------------------user action")
-    # print(user_action)
+    print("-----------------------------user action before")
+    print(user_action)
     # Do chỉ có 1 phần tử  lúc parse từ NER nên lấy 0
 
     # is_range_single = False
     if "time" in user_action['inform_slots'].keys():
         if user_action['inform_slots']["time"] != [] and isinstance(user_action['inform_slots']["time"],list):
             if isinstance(user_action['inform_slots']["time"][0],str):
+                factory = ActivityDateTimeToUnixFactory()
                 result = factory.processRawDatetimeInput(user_action['inform_slots']["time"][0])
+                print("---------------------input")
+                print(user_action['inform_slots']["time"][0])
+                print("----------------parse time result object")
+                print(result)
                 if result != []:
                     if len(result) == 2:
+                        print("------------------------2")
                         unix = [obj.convertToUnix() for obj in result]
+                        print("-----------------------unix")
+                        print(unix)
                         user_action['inform_slots']["time"] = unix
                     if len(result) == 1:
+                        print("------------------------1")
                         unix = []
                         time_obj = result[0]
                         if time_obj.upperBound != None:
@@ -1027,6 +1037,10 @@ def process_message_to_user_request(message,state_tracker):
                             time_obj = result[0]
                             if time_obj.upperBound != None:
                                 print("uppberBound is not None")
+                                print("---------------------------lower bound extract")
+                                print(time_obj.extractAllValue())
+                                print("---------------------------upper bound extract")
+                                print(time_obj.upperBound.extractAllValue())
                                 unix.append(time_obj.convertToUnix())
                                 unix.append(time_obj.upperBound.convertToUnix())
                                 confirm_obj["time"] = unix
