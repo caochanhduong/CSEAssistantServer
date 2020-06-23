@@ -69,8 +69,8 @@ REQUEST['address'] = [
     'cụ thể *address* là gì bạn nhớ không?'
 ]
 REQUEST['name_place'] = [
-    'Tại *name_place* nào bạn?',
-    'Cho mình xin cụ thể *name_place* với!'
+    'Tại *name_place* nào vậy bạn?',
+    'Cho mình xin cụ thể tên *name_place* với!'
 ]
 
 REQUEST['works'] = [
@@ -80,16 +80,17 @@ REQUEST['works'] = [
 
 REQUEST_REPEAT = [
     'Thông tin *request_key* bạn nhập vào chưa rõ ràng, bạn cung cấp lại giúp mình thông tin này nhé! ',
-    'Rất tiếc, thông tin *request_key* bạn nhập vào mình vẫn chưa rõ, bạn vui lòng cung cấp lại thông tin này giúp mình nhé!'
+    'Rất tiếc, thông tin *request_key* bạn nhập vào mình vẫn chưa rõ, bạn vui lòng cung cấp lại thông tin này giúp mình nhé!',
+    'Bạn cung cấp lại thông tin *request_key* giúp mình với nhé!'
 ]
 INFORM = {}
 INFORM['name_activity'] = [
-    'có phải bạn muốn hỏi về hoạt động *name_activity_instance* không?',
-    '*name_activity_instance* có phải là *name_activity* bạn muốn tìm không?'
+    'có phải bạn muốn hỏi về hoạt động "*name_activity_instance*" không?',
+    '"*name_activity_instance*" có phải là *name_activity* bạn muốn tìm không?'
 ]
 INFORM['type_activity'] = [
-    'Bạn có muốn mình tìm với *type_activity* là *type_activity_instance* không?',
-    '*type_activity* là *type_activity_instance* đúng không bạn?'
+    'Bạn có muốn mình tìm với *type_activity* là "*type_activity_instance*" không?',
+    '*type_activity* là "*type_activity_instance*" đúng không bạn?'
 ]
 INFORM['holder'] = [
     'Hoạt động này do *holder_instance* tổ chức đúng không nhỉ?',
@@ -116,7 +117,7 @@ INFORM['works'] = [
     'Tham gia hoạt động này thì thường sẽ làm các công việc như *works_instance*'
 ]
 INFORM['reward'] = [
-    'Tham gia hoạt động sẽ được *reward_instance*',
+    'Tham gia hoạt động sẽ được *reward_instance* ?',
     'Lợi ích khi bạn tham gia hoạt động sẽ là: *reward_instance*'
 ]
 INFORM['contact'] = [
@@ -143,7 +144,7 @@ AGENT_REQUEST_OBJECT = {
     "holder": "ban tổ chức",
     "time": "thời gian",
     "address": "địa chỉ",
-    "name_place": "tên địa điểm",
+    "name_place": "địa điểm",
     "works": "công việc"
 }
 
