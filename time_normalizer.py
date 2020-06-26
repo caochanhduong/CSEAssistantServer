@@ -227,9 +227,9 @@ separator_list = [
 	# "từ ("
 	"({0}).*?đến.*?{1}",
 	"({0}).*?cho tới.*?{1}",
-	"từ.*?({0}).*?-.*?{1}",
+	"từ.*?({0}).*?-.*?{1}"
 # 4th priority
-	"({0}).*?-.*?{1}"
+	# "({0}).*?-.*?{1}"
 
 ]
 class ActivityDateTime:
@@ -929,7 +929,7 @@ result = factory.processRawDatetimeInput("đầu tháng sau")
 result_1 = factory.processRawDatetimeInput("12h ngày 12-12-2020")
 result_2 = factory.processRawDatetimeInput("12h ngày 12-12-2020")
 # print(type(result_2))
-print([x.convertToUnix() for x in factory.processRawDatetimeInput("13h ngày 12-12-2020")])
+print([x.convertToUnix() for x in factory.processRawDatetimeInput("tuần sau")])
 # print([x.convertToUnix() for x in factory.processRawDatetimeInput("bắt đầu lúc 12h ngày 20 - 06 - 2020 và kết thúc lúc 12h ngày 01 - 08 - 2020")])
 
 # print(result_1)

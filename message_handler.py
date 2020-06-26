@@ -651,8 +651,9 @@ def find_all_entity(intent,input_sentence):
     print(normalized_input_sentence)
     if 'time' in list_order_entity_name:
         for pattern_time in list_pattern_time:
-            # print("pattern_time :{0}".format(pattern_time))
+            
             if re.findall(pattern_time,normalized_input_sentence)!=[]:
+                print(repr("match pattern_time :{0}".format(pattern_time)))
                 if 'time' not in result_entity_dict:
                     result_entity_dict['time'] = delete_last_space_list(re.findall(pattern_time,normalized_input_sentence))
                 else:
