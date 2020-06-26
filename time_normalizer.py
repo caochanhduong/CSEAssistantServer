@@ -12,60 +12,60 @@ date_time_pattern = {
 # full day, month, year
 	"day_month_year":
 	[
-		"ngày (\\d\\d?) tháng (\\d\\d?) năm (\\d\\d\\d?\\d?)",
-		"ngày (\\d\\d?)[/-](\\d\\d?)[/-](\\d\\d\\d?\\d?)",
-		"(\\d\\d?)[/-](\\d\\d?)[/-](\\d\\d\\d?\\d?)"
+		"ngày([ ]*\\d\\d?[ ]*)tháng([ ]*\\d\\d?[ ]*)năm([ ]*\\d\\d\\d?\\d?)",
+		"ngày([ ]*\\d\\d?[ ]*)[/-]([ ]*\\d\\d?[ ]*)[/-]([ ]*\\d\\d\\d?\\d?)",
+		"(\\d\\d?[ ]*)[/-]([ ]*\\d\\d?[ ]*)[/-]([ ]*\\d\\d\\d?\\d?)"
 	],
 # month, year
 	"month_year":
 	[
-		"tháng (\\d\\d?) năm (\\d\\d\\d?\\d?)",
-		"tháng (\\d\\d?)[/-](\\d\\d\\d?\\d?)",
-		"(\\d\\d?)[/-](\\d\\d\\d\\d)"
+		"tháng([ ]*\\d\\d?[ ]*)năm([ ]*\\d\\d\\d?\\d?)",
+		"tháng([ ]*\\d\\d?[ ]*)[/-]([ ]*\\d\\d\\d?\\d?)",
+		"(\\d\\d?[ ]*)[/-]([ ]*\\d\\d\\d\\d)"
 	],
 	
 # day, month
 	"day_month":
 	[
-		"ngày (\\d\\d?) tháng (\\d\\d?)",
-		"ngày (\\d\\d?)[/-](\\d\\d?)",
-		" (\\d\\d?)[/-](\\d\\d?)"
+		"ngày([ ]*\\d\\d?[ ]*)tháng([ ]*\\d\\d?)",
+		"ngày([ ]*\\d\\d?[ ]*)[/-]([ ]*\\d\\d?)",
+		" (\\d\\d?[ ]*)[/-]([ ]*\\d\\d?)"
 	],
 	
 # single day | month | year
 	"day":
 	[
-		"ngày (\\d\\d?)"
+		"ngày([ ]*\\d\\d?)"
 	],
 
 	"month":
 	[
-		"tháng (\\d\\d?)"
+		"tháng([ ]*\\d\\d?)"
 	],
 	"year":
 	[
-		"năm (\\d\\d\\d?\\d?)"
+		"năm([ ]*\\d\\d\\d?\\d?)"
 	],
 
 #full hour, minute, second
 	"hour_minute_second":
 	[
-		"(\\d\\d?) giờ (\\d\\d?) phút (\\d\\d?) giây",
-		"(\\d\\d?)[hg:](\\d\\d?)[mp:](\\d\\d?)[s]?"
+		"(\\d\\d?[ ]*)giờ([ ]*\\d\\d?[ ]*)phút([ ]*\\d\\d?[ ]*)giây",
+		"(\\d\\d?[ ]*)[hg:]([ ]*\\d\\d?[ ]*)[mp:]([ ]*\\d\\d?[ ]*)[s]?"
 	],
 
 #hour, minute
 	"hour_minute":
 	[
-		"(\\d\\d?) giờ (\\d\\d?) phút",
-		"(\\d\\d?)[hg:](\\d\\d?)[mp]?"
+		"(\\d\\d?[ ]*)giờ([ ]*\\d\\d?[ ]*)phút",
+		"(\\d\\d?[ ]*)[hg:]([ ]*\\d\\d?[ ]*)[mp]?"
 	],	
 
 	#single hour 
 	"hour":
 	[
-		"(\\d\\d?) giờ",
-		"(\\d\\d?)[hg]"
+		"(\\d\\d?[ ]*)giờ",
+		"(\\d\\d?[ ]*)[hg]"
 	]
 	
 	
@@ -162,14 +162,14 @@ for day in atomic["head"]:
 				advance_time["{0}_of_{1}_week".format(day, navigate)] += ["{0} {1}".format(dayValue, navigateValue) for dayValue in atomic[day] for navigateValue in atomic[navigate]]
 			advance_time["{0}_of_week".format(day)] = ["{}".format(dayValue) for dayValue in atomic[day]]
 
+# print("---------------------------------------advance_time")
+# print(advance_time)
+# list_all_pattern = []
+# for key in advance_time.keys():
+# 	list_all_pattern = list_all_pattern + advance_time[key]
 
-print(advance_time)
-list_all_pattern = []
-for key in advance_time.keys():
-	list_all_pattern = list_all_pattern + advance_time[key]
-
-list_all_pattern.sort(reverse=True,key=len)
-print(list_all_pattern)
+# list_all_pattern.sort(reverse=True,key=len)
+# print(list_all_pattern)
 advance_time_range = {
 	"month":{
 		"begin": [10, 1, 5],
@@ -223,13 +223,13 @@ separator_list = [
 
 	"từ.*?({0}).*?đến.*?{1}",
 	"từ.*?({0}).*?tới.*?{1}",
-# # 3rd priority
-# 	# "từ ("
-# 	"({0}).*?đến.*?{1}",
-# 	"({0}).*?cho tới.*?{1}",
-# 	"từ.*?({0}).*?-.*?{1}",
-# # 4th priority
-# 	"({0}).*?-.*?{1}"
+# 3rd priority
+	# "từ ("
+	"({0}).*?đến.*?{1}",
+	"({0}).*?cho tới.*?{1}",
+	"từ.*?({0}).*?-.*?{1}",
+# 4th priority
+	"({0}).*?-.*?{1}"
 
 ]
 class ActivityDateTime:
@@ -288,7 +288,7 @@ class ActivityDateTime:
 			self.month = monthInt
 			self.others["month"]["priority"] = priority
 		else:
-			print(">>>>>>>>>>>ERR: invalid month")
+			print(">>>>>>>>>>>ERR: invalid month: " + str(monthInt))
 	def validAndSetYear(self, yearString, priority=2):
 		if priority <= self.others["year"]["priority"]:
 			self.others["year"]["values"].append(yearString)
@@ -891,8 +891,8 @@ import json
 
 # 	])
 
-factory.test_catchAdvancePattern(
-	[
+# factory.test_catchAdvancePattern(
+# 	[
 # 			{"rawDatetime":"thời gian vào cuối tháng này", "boundIdx": 0, "expectedOutput":"31/{0}/{1} 0:0:0".format(datetime.now(localTimezone).month, datetime.now(localTimezone).year)}
 # 			,{"rawDatetime":"thời gian vào cuối tháng tới", "boundIdx": 0, "expectedOutput":"30/{0}/{1} 0:0:0".format(int(datetime.now(localTimezone).month) + 1, datetime.now(localTimezone).year)}
 # 			,{"rawDatetime":"thời gian vào cuối tháng tới", "boundIdx": 1, "expectedOutput":"21/{0}/{1} 0:0:0".format(int(datetime.now(localTimezone).month) + 1, datetime.now(localTimezone).year)}
@@ -915,38 +915,34 @@ factory.test_catchAdvancePattern(
 # 			,{"rawDatetime":"thời gian vào đầu tuần này", "boundIdx": 0, "expectedOutput":"12/{0}/{1} 0:0:0".format(int(datetime.now(localTimezone).month), datetime.now(localTimezone).year)}
 # 			,{"rawDatetime":"thời gian vào đầu tuần trước", "boundIdx": 0, "expectedOutput":"5/{0}/{1} 0:0:0".format(int(datetime.now(localTimezone).month), datetime.now(localTimezone).year)}
 # 			,{"rawDatetime":"thời gian vào 5 ngày tới", "boundIdx": 0, "expectedOutput":"18/{0}/{1} 0:0:0".format(int(datetime.now(localTimezone).month), datetime.now(localTimezone).year)}
-			{"rawDatetime":"thời gian bắt đầu vào ngày mai", "boundIdx": 0, "expectedOutput":"21/{0}/{1} 0:0:0".format(int(datetime.now(localTimezone).month), datetime.now(localTimezone).year)}
+			# {"rawDatetime":"thời gian bắt đầu vào ngày mai", "boundIdx": 0, "expectedOutput":"21/{0}/{1} 0:0:0".format(int(datetime.now(localTimezone).month), datetime.now(localTimezone).year)}
 # 			,{"rawDatetime":"thời gian bắt đầu vào thứ 5", "boundIdx": 0, "expectedOutput":"14/{0}/{1} 0:0:0".format(int(datetime.now(localTimezone).month), datetime.now(localTimezone).year)}
 # 			,{"rawDatetime":"thời gian bắt đầu vào thứ 5 tuần sau", "boundIdx": 0, "expectedOutput":"21/{0}/{1} 0:0:0".format(int(datetime.now(localTimezone).month), datetime.now(localTimezone).year)}
 # 			,{"rawDatetime":"thời gian bắt đầu vào thứ ba tuần trước", "boundIdx": 0, "expectedOutput":"5/{0}/{1} 0:0:0".format(int(datetime.now(localTimezone).month), datetime.now(localTimezone).year)}
 # 			,{"rawDatetime":"thời gian bắt đầu vào chủ nhật tuần này", "boundIdx": 0, "expectedOutput":"17/{0}/{1} 0:0:0".format(int(datetime.now(localTimezone).month), datetime.now(localTimezone).year)}
 # 			,{"rawDatetime":"thời gian bắt đầu vào thứ 5 tuần kế nhé", "boundIdx": 0, "expectedOutput":"21/{0}/{1} 0:0:0".format(int(datetime.now(localTimezone).month), datetime.now(localTimezone).year)}
 
-	]
-)
+# 	]
+# )
 
 result = factory.processRawDatetimeInput("đầu tháng sau")
-result_1 = factory.processRawDatetimeInput("thời gian dự thi: 1 ngày trước")
-result_2 = factory.processRawDatetimeInput("bắt đầu lúc 12h ngày 20 - 06 - 2021 và kết thúc lúc 12h ngày 01 - 08 - 2021")
-print(type(result_2))
-print([x.convertToUnix() for x in factory.processRawDatetimeInput("bắt đầu lúc 12h ngày 20 - 06 - 2021 và kết thúc lúc 12h ngày 01 - 08 - 2021")])
-print([x.convertToUnix() for x in factory.processRawDatetimeInput("bắt đầu lúc 12h ngày 20 - 06 - 2020 và kết thúc lúc 12h ngày 01 - 08 - 2020")])
+result_1 = factory.processRawDatetimeInput("12h ngày 12-12-2020")
+result_2 = factory.processRawDatetimeInput("12h ngày 12-12-2020")
+# print(type(result_2))
+print([x.convertToUnix() for x in factory.processRawDatetimeInput("13h ngày 12-12-2020")])
+# print([x.convertToUnix() for x in factory.processRawDatetimeInput("bắt đầu lúc 12h ngày 20 - 06 - 2020 và kết thúc lúc 12h ngày 01 - 08 - 2020")])
 
+# print(result_1)
 result_2 = []
 factory = ActivityDateTimeToUnixFactory()
 
-result_2 = factory.processRawDatetimeInput("bắt đầu lúc 12h ngày 20 - 06 - 2020 và kết thúc lúc 12h ngày 01 - 08 - 2020")
+# result_2 = factory.processRawDatetimeInput("bắt đầu lúc 12h ngày 20 - 06 - 2020 và kết thúc lúc 12h ngày 01 - 08 - 2020")
 
-print([x.convertToUnix() for x in factory.processRawDatetimeInput("bắt đầu lúc 12h ngày 20 - 06 - 2020 và kết thúc lúc 12h ngày 01 - 08 - 2020")])
+# print([x.convertToUnix() for x in factory.processRawDatetimeInput("bắt đầu lúc 12h ngày 20 - 06 - 2020 và kết thúc lúc 12h ngày 01 - 08 - 2020")])
 
 
-print(result_2)
-time = [obj.upperBound.convertToUnix() for obj in result]
-print(time)
 
-def convert_from_unix_to_iso_format(input_unix_timestamp):
-    return (datetime.fromtimestamp(input_unix_timestamp,localTimezone)).strftime('%d-%m-%Y %H:%M:%S')
-print(convert_from_unix_to_iso_format(time[0]))
+# time = [obj.extractAllValue() for obj in result]
 # unix_1 = [obj.convertToUnix() for obj in result_1]
 # unix_2 = [obj.convertToUnix() for obj in result_2]
 # print(unix_1)
@@ -962,6 +958,12 @@ print(convert_from_unix_to_iso_format(time[0]))
 # factory.test_processRawDatetimeInput(
 # 	[
 # 			{"rawDatetime":"từ 9h30-10h30 ngày 24/12/2019 đến 16h ngày 25/12/2019", "expectedOutput":"24/12/2019 9:30:0;25/12/2019 16:0:0"}
+# 			,{"rawDatetime":"bắt đầu lúc 12h ngày 20 - 07 -2021 và kết thúc lúc 12h ngày 01 - 08 - 2021", "expectedOutput":"20/7/2021 12:0:0;1/8/2021 12:0:0"}
+# 			,{"rawDatetime":"bắt đầu lúc 12h ngày 20 -  07 -2021 và kết thúc lúc 12h ngày 01 - 08 - 2021", "expectedOutput":"20/7/2021 12:0:0;1/8/2021 12:0:0"}
+# 			,{"rawDatetime":"bắt đầu lúc 12h ngày 20 - 07-2021 và kết thúc lúc 12h ngày 01 - 08 - 2021", "expectedOutput":"20/7/2021 12:0:0;1/8/2021 12:0:0"}
+# 			,{"rawDatetime":"bắt đầu lúc 12h 30 ngày 20 - 07-2021 và kết thúc lúc 12h ngày 01 - 08 - 2021", "expectedOutput":"20/7/2021 12:30:0;1/8/2021 12:0:0"}
+# 			,{"rawDatetime":"bắt đầu từ 07 - 2021 và kết thúc vào 08 - 2021", "expectedOutput":"1/7/2021 0:0:0;1/8/2021 0:0:0"}
+# 			,{"rawDatetime":"bắt đầu lúc 12h ngày 20  tháng 07 năm 2021 và kết thúc lúc 12h ngày 01 - 08 - 2021", "expectedOutput":"20/7/2021 12:0:0;1/8/2021 12:0:0"}
 # 			,{"rawDatetime":"thời gian dự thi: vào lúc 9g30 ngày 24/12/2019", "expectedOutput":"24/12/2019 9:30:0"}
 # 			,{"rawDatetime":"thời gian: buổi sáng 9h30-10h30 ngày 24/12/2019, buổi chiều: 16h ngày 25/12/2019", "expectedOutput":"24/12/2019 9:30:0;25/12/2019 16:0:0"}
 # 			,{"rawDatetime":"thời gian: sáng từ 9h30-10h30 ngày 24/12/2019, buổi chiều: 16h ngày 25/12/2019", "expectedOutput":"24/12/2019 9:30:0;25/12/2019 16:0:0"}
@@ -995,7 +997,7 @@ print(convert_from_unix_to_iso_format(time[0]))
 
 # 		,{"rawDatetime": "thời gian dự thi: đầu tuần sau", "expectedOutput": "lower_bound: 15/6/2020 0:0:0, upper_bound: 16/6/2020 23:59:59"}
 # 		,{"rawDatetime": "thời gian dự thi: cuối tuần sau", "expectedOutput": "lower_bound: 20/6/2020 0:0:0, upper_bound: 21/6/2020 23:59:59"}
-# 		,{"rawDatetime": "thời gian dự thi: thứ 2 tuần sau", "expectedOutput": "lower_bound: 15/6/2020 0:0:0, upper_bound: 15/6/2020 23:59:59"}
+		# {"rawDatetime": "thời gian dự thi: thứ 2 tuần sau", "expectedOutput": "lower_bound: 22/6/2020 0:0:0, upper_bound: 22/6/2020 23:59:59"}
 # 		,{"rawDatetime": "thời gian dự thi: cuối tháng tới", "expectedOutput": "lower_bound: 21/7/2020 0:0:0, upper_bound: 31/7/2020 23:59:59"}
 # 		,{"rawDatetime": "thời gian dự thi: cuối năm nay", "expectedOutput": "lower_bound: 1/9/2020 0:0:0, upper_bound: 31/12/2020 23:59:59"}
 
