@@ -131,7 +131,10 @@ advance_time = {
 	"triple_next_day": ["ngày kia"],
 	
 	"number_next_day": ["(\\d\\d?) ngày nữa", "(\\d\\d?) ngày tới", "(\\d\\d?) ngày sắp tới", "(\\d\\d?) ngày sau"],
-	"number_previous_day":["(\\d\\d?) ngày trước"]
+	"number_previous_day":["(\\d\\d?) ngày trước"],
+
+	"all_next_week": ["tuần sau", "tuần tới"],
+	"all_next_month": ["tháng sau", "tháng tới"]
 
 }
 month_mapping = {
@@ -179,6 +182,20 @@ advance_time_range = {
 			"10": [31, 21, 26],"mười": [31, 21, 26],
 			"11": [30, 21, 25],"mười một": [30, 21, 25],
 			"12": [31, 21, 26],"mười hai": [31, 21, 26],"chạp": [31, 21, 26]
+		},
+		"all": {
+			"1": [31, 1, 26],"một": [31, 1, 26],"giêng": [31, 1, 26],
+			"2": [monthrange(int(datetime.now(localTimezone).year),2)[1], 1, 24],"hai": [monthrange(int(datetime.now(localTimezone).year),2)[1], 1, 24],
+			"3": [31, 1, 26],"ba": [31, 1, 26],
+			"4": [30, 1, 25],"bốn": [30, 1, 25],"tư": [30, 1, 25],
+			"5": [31, 1, 26],"năm": [31, 1, 26],
+			"6": [30, 1, 25],"sáu": [30, 1, 25],
+			"7": [31, 1, 26],"bảy": [31, 1, 26],
+			"8": [31, 1, 26],"tám": [31, 1, 26],
+			"9": [30, 1, 25],"chín": [30, 1, 25],
+			"10": [31, 1, 26],"mười": [31, 1, 26],
+			"11": [30, 1, 25],"mười một": [30, 1, 25],
+			"12": [31, 1, 26],"mười hai": [31, 1, 26],"chạp": [31, 1, 26]
 		}
 	},
 	"year": {
@@ -188,6 +205,7 @@ advance_time_range = {
 	},
 	# begin with the first day of week
 	"week": {
+		"all":[-1, 0, 0],
 		"begin": [1, 0, 0],
 		"middle": [4, 2, 3],
 		"end": [-1, 5, -1],
@@ -221,7 +239,7 @@ separator_list = [
 	"({0}).*?cho tới.*?{1}",
 	"từ.*?({0}).*?-.*?{1}",
 # 4th priority
-	"({0}).*?-.*?{1}"
+	# "({0}).*?-.*?{1}"
 
 ]
 class ActivityDateTime:
@@ -601,12 +619,12 @@ class ActivityDateTimeToUnixFactory:
 							activityDateTime.validAndSetMonth(month_mapping[advance_result[0]], priority=1)	
 						
 						if boundIdx != 2:
-							if keyNameList[0] == "end":
+							if keyNameList[0] in ["end","all"]:
 								activityDateTime.validAndSetDay(advance_time_range["month"][keyNameList[0]][str(activityDateTime.month)][boundIdx], priority=1)	
 							else:
 								activityDateTime.validAndSetDay(advance_time_range["month"][keyNameList[0]][boundIdx], priority=1)
 						else:
-							if keyNameList[0] == "end":
+							if keyNameList[0] in ["end","all"]:
 								activityDateTime.validAndSetDay(advance_time_range["month"][keyNameList[0]][str(activityDateTime.month)][1], priority=1)	
 								activityDateTime.upperBound = ActivityDateTime()
 								activityDateTime.upperBound.validAndSetDay(advance_time_range["month"][keyNameList[0]][str(activityDateTime.month)][0], priority=1)
@@ -940,30 +958,31 @@ print(result_2[0].upperBound.convertToUnix())
 # )
 # print(unix)
 
-factory.test_processRawDatetimeInput(
-	[
-			{"rawDatetime":"từ 9h30-10h30 ngày 24/12/2019 đến 16h ngày 25/12/2019", "expectedOutput":"24/12/2019 9:30:0;25/12/2019 16:0:0"}
-			,{"rawDatetime":"bắt đầu lúc 12h ngày 20 - 07 -2021 và kết thúc lúc 12h ngày 01 - 08 - 2021", "expectedOutput":"20/7/2021 12:0:0;1/8/2021 12:0:0"}
-			,{"rawDatetime":"bắt đầu lúc 12h ngày 20 -  07 -2021 và kết thúc lúc 12h ngày 01 - 08 - 2021", "expectedOutput":"20/7/2021 12:0:0;1/8/2021 12:0:0"}
-			,{"rawDatetime":"bắt đầu lúc 12h ngày 20 - 07-2021 và kết thúc lúc 12h ngày 01 - 08 - 2021", "expectedOutput":"20/7/2021 12:0:0;1/8/2021 12:0:0"}
-			,{"rawDatetime":"bắt đầu lúc 12h 30 ngày 20 - 07-2021 và kết thúc lúc 12h ngày 01 - 08 - 2021", "expectedOutput":"20/7/2021 12:30:0;1/8/2021 12:0:0"}
-			,{"rawDatetime":"bắt đầu từ 07 - 2021 và kết thúc vào 08 - 2021", "expectedOutput":"1/7/2021 0:0:0;1/8/2021 0:0:0"}
-			,{"rawDatetime":"bắt đầu lúc 12h ngày 20  tháng 07 năm 2021 và kết thúc lúc 12h ngày 01 - 08 - 2021", "expectedOutput":"20/7/2021 12:0:0;1/8/2021 12:0:0"}
-			,{"rawDatetime":"thời gian dự thi: vào lúc 9g30 ngày 24/12/2019", "expectedOutput":"24/12/2019 9:30:0"}
-			,{"rawDatetime":"thời gian: buổi sáng 9h30-10h30 ngày 24/12/2019, buổi chiều: 16h ngày 25/12/2019", "expectedOutput":"24/12/2019 9:30:0;25/12/2019 16:0:0"}
-			,{"rawDatetime":"thời gian: sáng từ 9h30-10h30 ngày 24/12/2019, buổi chiều: 16h ngày 25/12/2019", "expectedOutput":"24/12/2019 9:30:0;25/12/2019 16:0:0"}
-			,{"rawDatetime":"thời gian: bắt đầu từ 9h30-10h30 ngày 24/12/2019 và sau đó kết thúc vào 16h ngày 25/12/2019", "expectedOutput":"24/12/2019 9:30:0;25/12/2019 16:0:0"}
-			,{"rawDatetime":"thời gian: 9h sáng 15/01", "expectedOutput":"15/1/2020 9:0:0"}
-			,{"rawDatetime":"thời gian: từ sáng thứ 4 lúc 9h30-10h30 ngày 24/12/2019 đến trưa sau 12h ngày 25/12/2019", "expectedOutput":"24/12/2019 9:30:0;25/12/2019 12:0:0"}
-			,{"rawDatetime":"cuối tháng 8 năm 2019", "expectedOutput":"26/8/2019 0:0:0"}
-			,{"rawDatetime":"lúc 9h30-10h30", "expectedOutput":"14/5/2020 9:30:0;14/5/2020 10:30:0"}
-			,{"rawDatetime":"lúc 9h30- 10h30", "expectedOutput":"14/5/2020 9:30:0;14/5/2020 10:30:0"}
-			,{"rawDatetime":"lúc 9h30- 10h30 ngày 24/12/2019", "expectedOutput":"24/12/2019 9:30:0;24/12/2019 10:30:0"}
-			,{"rawDatetime":"trong 2 ngày 24-25/12/2019", "expectedOutput":"24/12/2019 0:0:0;25/12/2019 0:0:0"}
-			,{"rawDatetime":"từ ngày 24 đến 25/12/2019", "expectedOutput":"24/12/2019 0:0:0;25/12/2019 0:0:0"}
-			,{"rawDatetime":"từ 10h ngày 24 đến 25/12/2019", "expectedOutput":"24/12/2019 10:0:0;25/12/2019 0:0:0"}
-			,{"rawDatetime":"lúc 10h ngày 24 đến 25/12/2019", "expectedOutput":"24/12/2019 10:0:0;25/12/2019 0:0:0"}
-	])
+# factory.test_processRawDatetimeInput(
+	# [
+# 			{"rawDatetime":"từ 9h30-10h30 ngày 24/12/2019 đến 16h ngày 25/12/2019", "expectedOutput":"24/12/2019 9:30:0;25/12/2019 16:0:0"}
+# 			,{"rawDatetime":"bắt đầu lúc 12h ngày 20 - 07 -2021 và kết thúc lúc 12h ngày 01 - 08 - 2021", "expectedOutput":"20/7/2021 12:0:0;1/8/2021 12:0:0"}
+# 			,{"rawDatetime":"bắt đầu lúc 12h ngày 20 -  07 -2021 và kết thúc lúc 12h ngày 01 - 08 - 2021", "expectedOutput":"20/7/2021 12:0:0;1/8/2021 12:0:0"}
+# 			,{"rawDatetime":"bắt đầu lúc 12h ngày 20 - 07-2021 và kết thúc lúc 12h ngày 01 - 08 - 2021", "expectedOutput":"20/7/2021 12:0:0;1/8/2021 12:0:0"}
+# 			,{"rawDatetime":"bắt đầu lúc 12h 30 ngày 20 - 07-2021 và kết thúc lúc 12h ngày 01 - 08 - 2021", "expectedOutput":"20/7/2021 12:30:0;1/8/2021 12:0:0"}
+# 			,{"rawDatetime":"bắt đầu từ 07 - 2021 và kết thúc vào 08 - 2021", "expectedOutput":"1/7/2021 0:0:0;1/8/2021 0:0:0"}
+# 			,{"rawDatetime":"bắt đầu lúc 12h ngày 20  tháng 07 năm 2021 và kết thúc lúc 12h ngày 01 - 08 - 2021", "expectedOutput":"20/7/2021 12:0:0;1/8/2021 12:0:0"}
+# 			,{"rawDatetime":"thời gian dự thi: vào lúc 9g30 ngày 24/12/2019", "expectedOutput":"24/12/2019 9:30:0"}
+# 			,{"rawDatetime":"thời gian: buổi sáng 9h30-10h30 ngày 24/12/2019, buổi chiều: 16h ngày 25/12/2019", "expectedOutput":"24/12/2019 9:30:0;25/12/2019 16:0:0"}
+# 			,{"rawDatetime":"thời gian: sáng từ 9h30-10h30 ngày 24/12/2019, buổi chiều: 16h ngày 25/12/2019", "expectedOutput":"24/12/2019 9:30:0;25/12/2019 16:0:0"}
+# 			,{"rawDatetime":"thời gian: bắt đầu từ 9h30-10h30 ngày 24/12/2019 và sau đó kết thúc vào 16h ngày 25/12/2019", "expectedOutput":"24/12/2019 9:30:0;25/12/2019 16:0:0"}
+# 			,{"rawDatetime":"thời gian: 9h sáng 15/01", "expectedOutput":"15/1/2020 9:0:0"}
+# 			,{"rawDatetime":"thời gian: từ sáng thứ 4 lúc 9h30-10h30 ngày 24/12/2019 đến trưa sau 12h ngày 25/12/2019", "expectedOutput":"24/12/2019 9:30:0;25/12/2019 12:0:0"}
+# 			,{"rawDatetime":"cuối tháng 8 năm 2019", "expectedOutput":"26/8/2019 0:0:0"}
+# 			,{"rawDatetime":"lúc 9h30-10h30", "expectedOutput":"14/5/2020 9:30:0;14/5/2020 10:30:0"}
+# 			,{"rawDatetime":"lúc 9h30- 10h30", "expectedOutput":"14/5/2020 9:30:0;14/5/2020 10:30:0"}
+# 			,{"rawDatetime":"lúc 9h30- 10h30 ngày 24/12/2019", "expectedOutput":"24/12/2019 9:30:0;24/12/2019 10:30:0"}
+# 			,{"rawDatetime":"trong 2 ngày 24-25/12/2019", "expectedOutput":"24/12/2019 0:0:0;25/12/2019 0:0:0"}
+# 			,{"rawDatetime":"từ ngày 24 đến 25/12/2019", "expectedOutput":"24/12/2019 0:0:0;25/12/2019 0:0:0"}
+# 			,{"rawDatetime":"từ 10h ngày 24 đến 25/12/2019", "expectedOutput":"24/12/2019 10:0:0;25/12/2019 0:0:0"}
+# 			,{"rawDatetime":"lúc 10h ngày 24 đến 25/12/2019", "expectedOutput":"24/12/2019 10:0:0;25/12/2019 0:0:0"}
+			# {"rawDatetime":"tuần sau", "expectedOutput":"12/12/2020 13:0:0"}
+	# ])
 
 
 
@@ -975,16 +994,18 @@ factory.test_processRawDatetimeInput(
 # 		,{"rawDatetime": "thời gian dự thi: ngày 24/12/2019", "expectedOutput": "lower_bound: 24/12/2019 0:0:0, upper_bound: 24/12/2019 23:59:59"}
 # 		,{"rawDatetime": "thời gian dự thi: 12/2019", "expectedOutput": "lower_bound: 1/12/2019 0:0:0, upper_bound: 31/12/2019 23:59:59"}
 # 		,{"rawDatetime": "thời gian dự thi: năm 2019", "expectedOutput": "lower_bound: 1/6/2019 0:0:0, upper_bound: 31/12/2019 23:59:59"}
-# 		,{"rawDatetime": "thời gian dự thi: vào ngày mai", "expectedOutput": "lower_bound: 14/6/2020 0:0:0, upper_bound: 14/6/2020 23:59:59"}
-# 		,{"rawDatetime": "thời gian dự thi: 2 ngày nữa", "expectedOutput": "lower_bound: 15/6/2020 0:0:0, upper_bound: 15/6/2020 23:59:59"}
-# 		,{"rawDatetime": "thời gian dự thi: 1 ngày trước", "expectedOutput": "lower_bound: 12/6/2020 0:0:0, upper_bound: 12/6/2020 23:59:59"}
-# 		,{"rawDatetime": "thời gian dự thi: hôm qua", "expectedOutput": "lower_bound: 12/6/2020 0:0:0, upper_bound: 12/6/2020 23:59:59"}
+# 		,{"rawDatetime": "thời gian dự thi: vào ngày mai", "expectedOutput": "lower_bound: 27/6/2020 0:0:0, upper_bound: 27/6/2020 23:59:59"}
+# 		,{"rawDatetime": "thời gian dự thi: 2 ngày nữa", "expectedOutput": "lower_bound: 28/6/2020 0:0:0, upper_bound: 28/6/2020 23:59:59"}
+# 		,{"rawDatetime": "thời gian dự thi: 1 ngày trước", "expectedOutput": "lower_bound: 25/6/2020 0:0:0, upper_bound: 25/6/2020 23:59:59"}
+# 		,{"rawDatetime": "thời gian dự thi: hôm qua", "expectedOutput": "lower_bound: 25/6/2020 0:0:0, upper_bound: 25/6/2020 23:59:59"}
 
-# 		,{"rawDatetime": "thời gian dự thi: đầu tuần sau", "expectedOutput": "lower_bound: 15/6/2020 0:0:0, upper_bound: 16/6/2020 23:59:59"}
-# 		,{"rawDatetime": "thời gian dự thi: cuối tuần sau", "expectedOutput": "lower_bound: 20/6/2020 0:0:0, upper_bound: 21/6/2020 23:59:59"}
-		# {"rawDatetime": "thời gian dự thi: thứ 2 tuần sau", "expectedOutput": "lower_bound: 22/6/2020 0:0:0, upper_bound: 22/6/2020 23:59:59"}
+# 		,{"rawDatetime": "thời gian dự thi: đầu tuần sau", "expectedOutput": "lower_bound: 29/6/2020 0:0:0, upper_bound: 30/6/2020 23:59:59"}
+# 		,{"rawDatetime": "thời gian dự thi: cuối tuần sau", "expectedOutput": "lower_bound: 4/7/2020 0:0:0, upper_bound: 5/7/2020 23:59:59"}
+# 		,{"rawDatetime": "thời gian dự thi: thứ 2 tuần sau", "expectedOutput": "lower_bound: 29/6/2020 0:0:0, upper_bound: 29/6/2020 23:59:59"}
 # 		,{"rawDatetime": "thời gian dự thi: cuối tháng tới", "expectedOutput": "lower_bound: 21/7/2020 0:0:0, upper_bound: 31/7/2020 23:59:59"}
 # 		,{"rawDatetime": "thời gian dự thi: cuối năm nay", "expectedOutput": "lower_bound: 1/9/2020 0:0:0, upper_bound: 31/12/2020 23:59:59"}
+# 		,{"rawDatetime": "thời gian dự thi: tuần sau", "expectedOutput": "lower_bound: 29/6/2020 0:0:0, upper_bound: 5/7/2020 23:59:59"}
+# 		,{"rawDatetime": "thời gian dự thi: tháng tới", "expectedOutput": "lower_bound: 1/7/2020 0:0:0, upper_bound: 31/7/2020 23:59:59"}
 
 
 # 	]
