@@ -16,8 +16,11 @@ import json
 from collections import OrderedDict
 import re
 from constants import *
-import datetime
+from datetime import *
 from time_normalizer import factory
+import pytz
+
+localTimezone = pytz.timezone('Asia/Saigon')
 # from api_conversation_manager import database
 # imp.reload(real_dict)
 
@@ -26,9 +29,7 @@ def sentence_to_index_vector(input_sentence):
   return vocab.numericalize(list_token)
 
 def convert_from_unix_to_iso_format(input_unix_timestamp):
-    return datetime.datetime.fromtimestamp(input_unix_timestamp).strftime('%d-%m-%Y %H:%M:%S')
-
-
+    return (datetime.fromtimestamp(input_unix_timestamp,localTimezone)).strftime('%d-%m-%Y %H:%M:%S')
 def check_match_sublist_and_substring(list_children,list_parent):
         # print("match sublist")
         count_match=0
@@ -154,12 +155,14 @@ def check_intent(message):
     #bắt WH question 
     for signal in list_question_signal:
         if signal in message.lower():
-            # #print(signal)
+            print("------------------------------------2")
+            print(signal)
             return True
 
     for verb in list_verb_have:
         if (message.lower().find(verb)!=-1 and message.lower().find("không")!=-1 and message.lower().find(verb)<message.lower().find("không")):
-            #print("1")
+            print("------------------------------------1")
+            print(verb)
             return True
 
     #....sao (liên hệ/đăng ký sao)
@@ -170,24 +173,26 @@ def check_intent(message):
     #.... sao bạn
     for object in list_object:
         if message.lower().find("sao")!=-1 and message.lower().find(object)!=-1 and message.lower().find("sao")<message.lower().find(object):
+            print("------------------------------------3")
+            print(object)
             return True
 
     if (message.lower().find("còn")!=-1 and message.lower().find("không")!=-1 and message.lower().find("còn")<message.lower().find("không")):
-        #print("1")
+        print("------------------------------------4")
         return True
     
     if message.lower().find("xin")!=-1 and (message.lower().find("chào")< message.lower().find("xin")):
-        #print("1")
+        print("------------------------------------5")
         return True
 
     #cách liên hệ/đăng ký
     if message.lower().find("cách")==0:
-        #print("1")
+        print("------------------------------------6")
         return True
 
     #ai .... (ai được tham gia)
     if message.lower().find("ai")==0:
-        #print("1")
+        print("------------------------------------7")
         return True
 
 
@@ -200,46 +205,57 @@ def check_intent(message):
         for verb in list_verb_want:
             if (message.lower().find(subject+" muốn "+verb)!=-1 or message.lower().find("cho "+subject+" "+verb)!=-1 or message.lower().find(subject+" cần "+verb)!=-1):
                 #print("2")
+                print("------------------------------------8")
                 return True
 
     for subject in list_subject:
         #chứ bạn
         if message.lower().find("chứ "+subject)!=-1:
             #print("3")
+            print("------------------------------------9")
             return True
         if (message.lower().find(subject+" muốn được hỏi")!=-1 or message.lower().find(subject+" muốn được tư vấn")!=-1):
             #print("3")
+            print("------------------------------------10")
             return True
         if (message.lower().find(subject+" cần")!=-1 and message.lower().find("thông tin")!=-1 and message.lower().find(subject+" cần")<message.lower().find("thông tin")):
             #print("4")
+            print("------------------------------------11")
             return True
         if (message.lower().find(subject+" muốn")!=-1 and message.lower().find("thông tin")!=-1 and message.lower().find(subject+" muốn")<message.lower().find("thông tin")):
             #print("4")
+            print("------------------------------------12")
             return True
         if (message.lower().find("gửi "+subject)!=-1):
             #print("5")
+            print("------------------------------------13")
             return True
         if (message.lower().find("chỉ "+subject)!=-1):
             #print("5")
+            print("------------------------------------14")
             return True
         if (message.lower().find("chỉ giúp "+subject)!=-1):
             #print("5")
+            print("------------------------------------15")
             return True
 
     #cho xin
     for verb in list_verb_want:
         if (message.lower().find("cho "+verb)!=-1):
             #print("6")
+            print("------------------------------------16")
             return True
 
     # nào ... nhỉ
     for signal in list_question_signal_last:
         if (message.lower().find("nào")!=-1) and (message.lower().find(signal)!=-1) and (message.lower().find("nào")<message.lower().find(signal)):
             #print("6")
+            print("------------------------------------17")
             return True
 
     #...... hả
     if message.lower().split(' ')[len(message.lower().split(' '))-1]=="hả":
+        print("------------------------------------18")
         return True
     
 
@@ -247,6 +263,7 @@ def check_intent(message):
     #gửi cho mình/cho mình/gửi mình/mình cần/mình muốn
     for subject in list_subject:
         if (message.lower().find("cho "+subject)!=-1) or (message.lower().find("gửi "+subject)!=-1) or (message.lower().find(subject+" cần")!=-1) or (message.lower().find(subject+" muốn")!=-1):
+            print("------------------------------------19")
             return True
 
 
@@ -254,10 +271,12 @@ def check_intent(message):
     #mình định....
     for subject in list_subject:
         if ((message.lower().find(subject)!=-1) and (message.lower().find("định")!=-1) and (message.lower().find(subject)<message.lower().find("định"))) or ((message.lower().find(subject)!=-1) and (message.lower().find("cần")!=-1) and (message.lower().find(subject)<message.lower().find("cần"))) or ((message.lower().find(subject)!=-1) and (message.lower().find("muốn")!=-1) and (message.lower().find(subject)<message.lower().find("muốn"))):
+            print("------------------------------------20")
             return True
 
     #bắt YES-NO/WH question mà signal cuối câu 
     if len(message.split(" "))>3 and (message.split(" ")[-1].lower()=="chưa" or message.split(" ")[-1].lower()=="không" or message.split(" ")[-1].lower()=="ta" or message.split(" ")[-1].lower()=="sao" or message.split(" ")[-1].lower()=="nhỉ" or message.split(" ")[-1].lower()=="nào"):
+        print("------------------------------------21")
         #print("7")
         return True
 
@@ -266,6 +285,7 @@ def check_intent(message):
     for subject in list_object:
         for question_signal_last in list_question_signal_last:
             if message.split(" ")[-1].lower()==subject and message.split(" ")[-2].lower()==question_signal_last:
+                print("------------------------------------22")
                 #print("8")
                 return True 
     
@@ -279,7 +299,8 @@ def preprocess_message(message):
     message = message.replace('!', ' ! ')
     message = message.replace('&', ' & ')
     message = message.replace('?', ' ? ')
-    message = message.replace('-', ' - ')
+    # liên quan đến thời gian nên không được cách ra
+    # message = message.replace('-', ' - ')
     message = message.replace('(', ' ( ')
     message = message.replace(')', ' ) ')
     message = compound2unicode(message)
@@ -630,8 +651,9 @@ def find_all_entity(intent,input_sentence):
     print(normalized_input_sentence)
     if 'time' in list_order_entity_name:
         for pattern_time in list_pattern_time:
-            # print("pattern_time :{0}".format(pattern_time))
+            
             if re.findall(pattern_time,normalized_input_sentence)!=[]:
+                print(repr("match pattern_time :{0}".format(pattern_time)))
                 if 'time' not in result_entity_dict:
                     result_entity_dict['time'] = delete_last_space_list(re.findall(pattern_time,normalized_input_sentence))
                 else:
@@ -902,8 +924,8 @@ def process_message_to_user_request(message,state_tracker):
         user_action = {}
         if intent not in ['hello','done','not intent','thanks','anything',"other"]:
             result_entity_dict, confirm_obj = find_all_entity(intent,processed_message)
-            # print(result_entity_dict)
-            # print(intent)
+            print(result_entity_dict)
+            print(intent)
             if "name_activity" not in result_entity_dict.keys() and intent != "name_activity":
                 user_action['intent'] = 'no_name'
                 user_action['inform_slots'] = {}
@@ -982,8 +1004,8 @@ def process_message_to_user_request(message,state_tracker):
                         else:
                             user_action["inform_slots"][key][i] = user_action["inform_slots"][key][i]
     
-    # print("-----------------------------user action")
-    # print(user_action)
+    print("-----------------------------user action before")
+    print(user_action)
     # Do chỉ có 1 phần tử  lúc parse từ NER nên lấy 0
 
     # is_range_single = False
@@ -991,11 +1013,19 @@ def process_message_to_user_request(message,state_tracker):
         if user_action['inform_slots']["time"] != [] and isinstance(user_action['inform_slots']["time"],list):
             if isinstance(user_action['inform_slots']["time"][0],str):
                 result = factory.processRawDatetimeInput(user_action['inform_slots']["time"][0])
+                # print("---------------------input")
+                print(user_action['inform_slots']["time"][0])
+                # print("----------------parse time result object")
+                # print(result)
                 if result != []:
                     if len(result) == 2:
+                        # print("------------------------2")
                         unix = [obj.convertToUnix() for obj in result]
+                        # print("-----------------------unix")
+                        print(unix)
                         user_action['inform_slots']["time"] = unix
                     if len(result) == 1:
+                        # print("------------------------1")
                         unix = []
                         time_obj = result[0]
                         if time_obj.upperBound != None:
@@ -1027,6 +1057,10 @@ def process_message_to_user_request(message,state_tracker):
                             time_obj = result[0]
                             if time_obj.upperBound != None:
                                 print("uppberBound is not None")
+                                print("---------------------------lower bound extract")
+                                print(time_obj.extractAllValue())
+                                print("---------------------------upper bound extract")
+                                print(time_obj.upperBound.extractAllValue())
                                 unix.append(time_obj.convertToUnix())
                                 unix.append(time_obj.upperBound.convertToUnix())
                                 confirm_obj["time"] = unix

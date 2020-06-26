@@ -165,6 +165,14 @@ for day in atomic["head"]:
 				advance_time["{0}_of_{1}_week".format(day, navigate)] += ["{0} {1}".format(dayValue, navigateValue) for dayValue in atomic[day] for navigateValue in atomic[navigate]]
 			advance_time["{0}_of_week".format(day)] = ["{}".format(dayValue) for dayValue in atomic[day]]
 
+# print("---------------------------------------advance_time")
+# print(advance_time)
+# list_all_pattern = []
+# for key in advance_time.keys():
+# 	list_all_pattern = list_all_pattern + advance_time[key]
+
+# list_all_pattern.sort(reverse=True,key=len)
+# print(list_all_pattern)
 advance_time_range = {
 	"month":{
 		"begin": [10, 1, 5],
@@ -237,7 +245,7 @@ separator_list = [
 	# "từ ("
 	"({0}).*?đến.*?{1}",
 	"({0}).*?cho tới.*?{1}",
-	"từ.*?({0}).*?-.*?{1}",
+	"từ.*?({0}).*?-.*?{1}"
 # 4th priority
 	# "({0}).*?-.*?{1}"
 
@@ -935,15 +943,22 @@ import json
 # 	]
 # )
 
-result = factory.processRawDatetimeInput("ngọc trinh")
-result_1 = factory.processRawDatetimeInput("thời gian dự thi: 1 ngày trước")
-result_2 = factory.processRawDatetimeInput("thứ hai tuần sau")
+result = factory.processRawDatetimeInput("đầu tháng sau")
+result_1 = factory.processRawDatetimeInput("12h ngày 12-12-2020")
+result_2 = factory.processRawDatetimeInput("12h ngày 12-12-2020")
+# print(type(result_2))
+print([x.convertToUnix() for x in factory.processRawDatetimeInput("tuần sau")])
+# print([x.convertToUnix() for x in factory.processRawDatetimeInput("bắt đầu lúc 12h ngày 20 - 06 - 2020 và kết thúc lúc 12h ngày 01 - 08 - 2020")])
+
+# print(result_1)
+result_2 = []
+factory = ActivityDateTimeToUnixFactory()
+
+# result_2 = factory.processRawDatetimeInput("bắt đầu lúc 12h ngày 20 - 06 - 2020 và kết thúc lúc 12h ngày 01 - 08 - 2020")
+
+# print([x.convertToUnix() for x in factory.processRawDatetimeInput("bắt đầu lúc 12h ngày 20 - 06 - 2020 và kết thúc lúc 12h ngày 01 - 08 - 2020")])
 
 
-
-
-print(result_2[0].convertToUnix())
-print(result_2[0].upperBound.convertToUnix())
 
 # time = [obj.extractAllValue() for obj in result]
 # unix_1 = [obj.convertToUnix() for obj in result_1]
@@ -959,7 +974,11 @@ print(result_2[0].upperBound.convertToUnix())
 # print(unix)
 
 # factory.test_processRawDatetimeInput(
+<<<<<<< HEAD
 	# [
+=======
+# 	[
+>>>>>>> 424352e915d439afe6b4fe62d20cc2f2d2870596
 # 			{"rawDatetime":"từ 9h30-10h30 ngày 24/12/2019 đến 16h ngày 25/12/2019", "expectedOutput":"24/12/2019 9:30:0;25/12/2019 16:0:0"}
 # 			,{"rawDatetime":"bắt đầu lúc 12h ngày 20 - 07 -2021 và kết thúc lúc 12h ngày 01 - 08 - 2021", "expectedOutput":"20/7/2021 12:0:0;1/8/2021 12:0:0"}
 # 			,{"rawDatetime":"bắt đầu lúc 12h ngày 20 -  07 -2021 và kết thúc lúc 12h ngày 01 - 08 - 2021", "expectedOutput":"20/7/2021 12:0:0;1/8/2021 12:0:0"}
@@ -981,8 +1000,12 @@ print(result_2[0].upperBound.convertToUnix())
 # 			,{"rawDatetime":"từ ngày 24 đến 25/12/2019", "expectedOutput":"24/12/2019 0:0:0;25/12/2019 0:0:0"}
 # 			,{"rawDatetime":"từ 10h ngày 24 đến 25/12/2019", "expectedOutput":"24/12/2019 10:0:0;25/12/2019 0:0:0"}
 # 			,{"rawDatetime":"lúc 10h ngày 24 đến 25/12/2019", "expectedOutput":"24/12/2019 10:0:0;25/12/2019 0:0:0"}
+<<<<<<< HEAD
 			# {"rawDatetime":"tuần sau", "expectedOutput":"12/12/2020 13:0:0"}
 	# ])
+=======
+# 	])
+>>>>>>> 424352e915d439afe6b4fe62d20cc2f2d2870596
 
 
 
