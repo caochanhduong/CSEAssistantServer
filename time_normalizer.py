@@ -974,11 +974,7 @@ factory = ActivityDateTimeToUnixFactory()
 # print(unix)
 
 # factory.test_processRawDatetimeInput(
-<<<<<<< HEAD
 	# [
-=======
-# 	[
->>>>>>> 424352e915d439afe6b4fe62d20cc2f2d2870596
 # 			{"rawDatetime":"từ 9h30-10h30 ngày 24/12/2019 đến 16h ngày 25/12/2019", "expectedOutput":"24/12/2019 9:30:0;25/12/2019 16:0:0"}
 # 			,{"rawDatetime":"bắt đầu lúc 12h ngày 20 - 07 -2021 và kết thúc lúc 12h ngày 01 - 08 - 2021", "expectedOutput":"20/7/2021 12:0:0;1/8/2021 12:0:0"}
 # 			,{"rawDatetime":"bắt đầu lúc 12h ngày 20 -  07 -2021 và kết thúc lúc 12h ngày 01 - 08 - 2021", "expectedOutput":"20/7/2021 12:0:0;1/8/2021 12:0:0"}
@@ -1000,12 +996,8 @@ factory = ActivityDateTimeToUnixFactory()
 # 			,{"rawDatetime":"từ ngày 24 đến 25/12/2019", "expectedOutput":"24/12/2019 0:0:0;25/12/2019 0:0:0"}
 # 			,{"rawDatetime":"từ 10h ngày 24 đến 25/12/2019", "expectedOutput":"24/12/2019 10:0:0;25/12/2019 0:0:0"}
 # 			,{"rawDatetime":"lúc 10h ngày 24 đến 25/12/2019", "expectedOutput":"24/12/2019 10:0:0;25/12/2019 0:0:0"}
-<<<<<<< HEAD
 			# {"rawDatetime":"tuần sau", "expectedOutput":"12/12/2020 13:0:0"}
 	# ])
-=======
-# 	])
->>>>>>> 424352e915d439afe6b4fe62d20cc2f2d2870596
 
 
 

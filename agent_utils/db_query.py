@@ -38,9 +38,9 @@ class DBQuery:
  
         self.db = database
         # {frozenset: {string: int}} A dict of dicts
-        self.cached_db_slot = defaultdict(dict)
+        # self.cached_db_slot = defaultdict(dict)
         # {frozenset: {'#': {'slot': 'value'}}} A dict of dicts of dicts, a dict of DB sub-dicts
-        self.cached_db = defaultdict(dict)
+        # self.cached_db = defaultdict(dict)
         self.no_query = no_query_keys
         self.match_key = usersim_default_key
  
@@ -218,14 +218,14 @@ class DBQuery:
         inform_items = frozenset(inform_items)
  
         # inform_items = frozenset(new_constraints.items())
-        cache_return = self.cached_db[inform_items]
+        # cache_return = self.cached_db[inform_items]
  
-        if cache_return == None:
-            # If it is none then no matches fit with the constraints so return an empty dict
-            return {}
+        # if cache_return == None:
+        #     # If it is none then no matches fit with the constraints so return an empty dict
+        #     return {}
         # if it isnt empty then return what it is
-        if cache_return:
-            return cache_return
+        # if cache_return:
+        #     return cache_return
         # else continue on
  
         available_options = {}
@@ -240,7 +240,7 @@ class DBQuery:
             #đổi từ object id sang string và dùng id đó làm key (thay vì dùng index của mảng để làm key vì không xác định đc index)
             result["_id"] = str(result["_id"])
             available_options.update({result['_id']:result})
-            self.cached_db[inform_items].update({result['_id']: result})
+            # self.cached_db[inform_items].update({result['_id']: result})
  
  
  
@@ -260,8 +260,8 @@ class DBQuery:
         #             available_options.update({id: current_option_dict})
  
         # if nothing available then set the set of constraint items to none in cache
-        if not available_options:
-            self.cached_db[inform_items] = None
+        # if not available_options:
+        #     self.cached_db[inform_items] = None
  
         return available_options
     def get_db_results_for_slots(self, current_informs):
@@ -291,10 +291,10 @@ class DBQuery:
         inform_items ={k:tuple(v) for k,v in tuple_current_informs.items()}.items()
         inform_items = frozenset(inform_items)
         # # A dict of the inform keys and their counts as stored (or not stored) in the cached_db_slot
-        cache_return = self.cached_db_slot[inform_items]
+        # cache_return = self.cached_db_slot[inform_items]
         temp_current_informs=copy.deepcopy(current_informs)
-        if cache_return:
-            return cache_return
+        # if cache_return:
+        #     return cache_return
  
         # If it made it down here then a new query was made and it must add it to cached_db_slot and return it
         # Init all key values with 0
@@ -319,9 +319,9 @@ class DBQuery:
         # current_informs_constraint={k:v.lower() for k,v in temp_current_informs.items()}
         db_results['matching_all_constraints'] = self.db.activities.count(self.convert_to_regex_constraint(temp_current_informs))
        
-        # update cache (set the empty dict)
-        self.cached_db_slot[inform_items].update(db_results)
-        assert self.cached_db_slot[inform_items] == db_results
+        # # update cache (set the empty dict)
+        # self.cached_db_slot[inform_items].update(db_results)
+        # assert self.cached_db_slot[inform_items] == db_results
         return db_results
     # def convert_to_regex_constraint(self, constraints):
     #     list_and_out = []

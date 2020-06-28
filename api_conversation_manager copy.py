@@ -5,9 +5,9 @@
 
 
 # chạy mining nhớ exclude intent
-# from data_utils.check_question import check_question
-# from information_extractor import extract_information
-# from intent_regconizer_activity import extract_and_get_intent
+from data_utils.check_question import check_question
+from information_extractor import extract_information
+from intent_regconizer_activity import extract_and_get_intent
 import time
 import random
 import numpy as np
@@ -158,7 +158,6 @@ def latest_activity():
                 list_result_obj_map.append(obj_map)
         result_data["time_works_place_address_mapping"] = list_obj_map
         result[i] = result_data
-    result.reverse()
     return jsonify({"code": 200, "result": result})
 
 @app.route('/api/cse-assistant-conversation-manager', methods=['POST'])

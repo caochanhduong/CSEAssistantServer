@@ -926,7 +926,7 @@ def process_message_to_user_request(message,state_tracker):
             result_entity_dict, confirm_obj = find_all_entity(intent,processed_message)
             print(result_entity_dict)
             print(intent)
-            if "name_activity" not in result_entity_dict.keys() and intent != "name_activity":
+            if "name_activity" not in result_entity_dict.keys() and intent not in ["name_activity","activity"]:
                 user_action['intent'] = 'no_name'
                 user_action['inform_slots'] = {}
                 user_action['request_slots'] = {}
