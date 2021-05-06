@@ -16,7 +16,7 @@ cymem==2.0.2
 fastai==1.0.58
 fastprogress==0.1.21
 Flask==1.1.1
-Flask-Cors==3.0.8
+Flask-Cors==3.0.9
 Flask-PyMongo==2.3.0
 gast==0.2.2
 google-auth==1.11.2
