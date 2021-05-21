@@ -12,4 +12,4 @@ Keras==2.2.5
 Keras-Applications==1.0.8
 Keras-Preprocessing==1.1.0
 pymongo
-tensorflow==1.14.0
+tensorflow==2.5.0
